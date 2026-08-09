@@ -17,6 +17,7 @@ import {
   enrollInEducation,
   type EducationPathId,
 } from './core/life/education.js'
+import { activeConjuncture } from './core/life/conjuncture.js'
 import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.js'
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
@@ -161,6 +162,7 @@ function render(): void {
   const actions = session.availableActions(state)
   const dialogue = dialogueView(state, session.dialogueLookup)
   const battle = battleView(state, session.desenroloLookup)
+  const conjuncture = activeConjuncture(state)
   const exploring = state.mode.kind === 'world'
   const copy =
     state.mode.kind === 'ended'
@@ -170,7 +172,7 @@ function render(): void {
         : battle
           ? `<strong>${battle.transcript.at(-1)?.text ?? battle.subtitle ?? ''}</strong><span>Paciência ${battle.patience}/${battle.patienceMax} · turno ${battle.turn}</span>`
           : `<strong>${content.places[state.place]?.blurb ?? 'Explore o bairro.'}</strong><span>Ande com as setas/WASD. Aproxime-se e use Espaço.</span>`
-  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${time(state.clock.minuteOfDay)} · ${period(state.clock.period)}</b></span></header><section class="scene ${exploring ? 'exploring' : ''}"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions ${exploring ? 'world-actions' : ''}">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><div class="utility-buttons"><button class="sound-button" data-command="sound" aria-label="${audio.isMuted() ? 'Ativar som' : 'Silenciar som'}">${audio.isMuted() ? 'SOM OFF' : 'SOM ON'}</button><button class="menu-button" data-command="menu">Caderninho</button></div>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
+  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${time(state.clock.minuteOfDay)} · ${period(state.clock.period)}</b></span></header>${conjuncture ? `<aside class="news-flash"><b>RADAR DA CIDADE</b><span>${conjuncture.headline}</span><small>${conjuncture.fact}</small></aside>` : ''}<section class="scene ${exploring ? 'exploring' : ''}"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions ${exploring ? 'world-actions' : ''}">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><div class="utility-buttons"><button class="sound-button" data-command="sound" aria-label="${audio.isMuted() ? 'Ativar som' : 'Silenciar som'}">${audio.isMuted() ? 'SOM OFF' : 'SOM ON'}</button><button class="menu-button" data-command="menu">Caderninho</button></div>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
   bind()
   world.sync({
     placeId: state.place,

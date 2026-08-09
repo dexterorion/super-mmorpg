@@ -133,6 +133,37 @@ button {
   box-shadow: 6px 6px 0 var(--ink);
   background: rgba(16, 25, 35, 0.92);
 }
+
+.news-flash {
+  position: fixed;
+  z-index: 5;
+  top: 4.4rem;
+  left: 50%;
+  width: min(42rem, calc(100vw - 2rem));
+  padding: 0.65rem 0.9rem;
+  transform: translateX(-50%);
+  border: 2px solid #f0c75e;
+  background: rgba(26, 30, 35, 0.94);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.45);
+  color: #f7e8b4;
+}
+
+.news-flash b,
+.news-flash span,
+.news-flash small {
+  display: block;
+}
+
+.news-flash b {
+  color: #f0c75e;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+
+.news-flash small {
+  margin-top: 0.25rem;
+  color: #d6d3c9;
+}
 .hud span {
   padding: 10px 16px;
   color: var(--mist);

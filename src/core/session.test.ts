@@ -302,6 +302,19 @@ describe('GameSession actions', () => {
     expect(drank.state.player.energy).toBe(43)
   })
 
+  it('turns a due city bulletin into a gameplay event after an action', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    const state = { ...base, place: 'a', clock: { ...base.clock, day: 2 } }
+    const result = session.performById(state, 'do:work')
+
+    expect(result.events).toContainEqual(
+      expect.objectContaining({ type: 'conjuncture', eventId: 'rent_2025' })
+    )
+    expect(result.state.flags['conjuncture:last']).toBe('rent_2025')
+    expect(result.state.player.monthlyRent).toBeGreaterThan(base.player.monthlyRent)
+  })
+
   it('decrements a consumable stack without removing the remaining items', () => {
     const session = new GameSession(playableContent())
     const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })

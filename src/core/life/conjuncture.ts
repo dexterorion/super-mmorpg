@@ -1,4 +1,6 @@
 import type { ArchetypeId } from '../types.js'
+import type { GameEvent } from '../types.js'
+import { clamp, withJournalEntry, type GameState } from '../state/state.js'
 
 export type ConjunctureId =
   'selic_2026_06' | 'rent_2025' | 'construction_jobs_2025' | 'financial_crime_investigation_2026_05'
@@ -124,4 +126,98 @@ export function resolveConjuncture(
     educationAvailable: true,
     ...event.impacts[archetype],
   }
+}
+
+/**
+ * News reaches the player as the first act unfolds. The dates above keep the
+ * real-world reference honest; these day numbers pace the playable campaign.
+ */
+export const conjunctureSchedule: readonly {
+  readonly day: number
+  readonly eventId: ConjunctureId
+}[] = [
+  { day: 2, eventId: 'rent_2025' },
+  { day: 3, eventId: 'construction_jobs_2025' },
+  { day: 4, eventId: 'financial_crime_investigation_2026_05' },
+  { day: 5, eventId: 'selic_2026_06' },
+]
+
+export interface ConjunctureResolution {
+  readonly state: GameState
+  readonly events: readonly GameEvent[]
+}
+
+const appliedFlag = (id: ConjunctureId): string => `conjuncture:applied:${id}`
+
+/** Turns contextual scores into modest, legible consequences in centavos. */
+export function applyConjuncture(state: GameState, eventId: ConjunctureId): ConjunctureResolution {
+  if (state.flags[appliedFlag(eventId)] === true) return { state, events: [] }
+
+  const outcome = resolveConjuncture(eventId, state.player.archetype)
+  const incomeDelta = Math.round((state.player.monthlyIncome * outcome.income * 3) / 100)
+  const rentDelta = Math.round((state.player.monthlyRent * outcome.housingCost * 2) / 100)
+  const opportunityMoney = outcome.opportunity * 3_000
+  const immediateDelta = incomeDelta + opportunityMoney - rentDelta
+  const energyDelta = -(outcome.strain * 3)
+
+  let next: GameState = {
+    ...state,
+    player: {
+      ...state.player,
+      monthlyIncome: Math.max(0, state.player.monthlyIncome + incomeDelta),
+      monthlyRent: Math.max(0, state.player.monthlyRent + rentDelta),
+      money: Math.max(0, state.player.money + immediateDelta),
+      energy: clamp(state.player.energy + energyDelta, 0, state.player.energyMax),
+    },
+    flags: {
+      ...state.flags,
+      [appliedFlag(eventId)]: true,
+      'conjuncture:last': eventId,
+    },
+  }
+  next = withJournalEntry(next, {
+    id: `conjuncture:${eventId}`,
+    kind: 'lesson',
+    text: `${outcome.headline}. No seu mês: ${signedMoney(immediateDelta)} e ${energyDelta} de disposição.`,
+  })
+
+  return {
+    state: next,
+    events: [
+      {
+        type: 'conjuncture',
+        eventId,
+        headline: outcome.headline,
+        moneyDelta: immediateDelta,
+        energyDelta,
+        incomeDelta,
+        rentDelta,
+      },
+    ],
+  }
+}
+
+/** Applies every missed bulletin, which also makes old saves catch up safely. */
+export function applyDueConjuncture(state: GameState): ConjunctureResolution {
+  let next = state
+  const events: GameEvent[] = []
+  for (const scheduled of conjunctureSchedule) {
+    if (scheduled.day > next.clock.day) continue
+    const resolved = applyConjuncture(next, scheduled.eventId)
+    next = resolved.state
+    events.push(...resolved.events)
+  }
+  return { state: next, events }
+}
+
+export function activeConjuncture(state: GameState): ConjunctureOutcome | undefined {
+  const id = state.flags['conjuncture:last']
+  return typeof id === 'string' && id in conjunctureEvents
+    ? resolveConjuncture(id as ConjunctureId, state.player.archetype)
+    : undefined
+}
+
+function signedMoney(centavos: number): string {
+  const sign = centavos >= 0 ? '+' : '−'
+  return `${sign}R$ ${(Math.abs(centavos) / 100).toFixed(2).replace('.', ',')}`
 }

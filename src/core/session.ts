@@ -27,6 +27,7 @@ import {
 import { isFlagTrue, withFlag, type GameState } from './state/state.js'
 import { estimateCommute, type TravelMode } from './life/commute.js'
 import { advanceEducation } from './life/education.js'
+import { applyDueConjuncture } from './life/conjuncture.js'
 
 /**
  * The one surface everything drives the game through.
@@ -345,10 +346,10 @@ export class GameSession {
       ...result.state,
       elapsedMinutes: result.state.elapsedMinutes + SECONDS_PER_ACTION[action.kind] / 60,
     }
-    return {
-      state: this.reconcile(advanceEducation(withTime), result.state.place !== state.place),
-      events: result.events,
-    }
+    const withEducation = advanceEducation(withTime)
+    const reconciled = this.reconcile(withEducation, result.state.place !== state.place)
+    const conjuncture = applyDueConjuncture(reconciled)
+    return { state: conjuncture.state, events: [...result.events, ...conjuncture.events] }
   }
 
   /** Convenience for the bot and for tests: perform by the action's stable id. */
