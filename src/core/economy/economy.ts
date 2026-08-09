@@ -53,8 +53,9 @@ export function spendMoney(state: GameState, cost: Centavos): GameState {
 
 // --- Transit -----------------------------------------------------------
 
-export function canRide(state: GameState): boolean {
-  return state.player.transit >= FARE
+export function canRide(state: GameState, fare: Centavos = FARE): boolean {
+  assertCentavos(fare)
+  return state.player.transit >= fare
 }
 
 export function topUpTransit(state: GameState, amount: Centavos): GameState {
@@ -70,11 +71,11 @@ export function topUpTransit(state: GameState, amount: Centavos): GameState {
   }
 }
 
-export function payFare(state: GameState): GameState {
-  if (!canRide(state)) return state
+export function payFare(state: GameState, fare: Centavos = FARE): GameState {
+  if (!canRide(state, fare)) return state
   return {
     ...state,
-    player: { ...state.player, transit: state.player.transit - FARE },
+    player: { ...state.player, transit: state.player.transit - fare },
   }
 }
 

@@ -226,13 +226,61 @@ describe('GameSession actions', () => {
     expect(result.state).toMatchObject({
       district: 'centro',
       place: 'c',
-      clock: { period: 'morning', minuteOfDay: 355 },
+      clock: { period: 'morning', minuteOfDay: 353 },
     })
     const revisiting = session.performById(
       { ...state, visitedDistricts: ['tiete', 'centro'] },
       'travel:centro'
     )
     expect(revisiting.state.visitedDistricts).toEqual(['tiete', 'centro'])
+  })
+
+  it('applies the preferred commute mode to time, credit and energy', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    const walking = session.performById(
+      { ...base, place: 'a', player: { ...base.player, preferredTravelMode: 'walk' } },
+      'travel:centro'
+    ).state
+    expect(walking.clock.minuteOfDay).toBe(439)
+    expect(walking.player).toMatchObject({ transit: 0, energy: 47 })
+
+    const bus = session.performById(
+      {
+        ...base,
+        place: 'a',
+        player: { ...base.player, preferredTravelMode: 'bus', transit: 1_000 },
+      },
+      'travel:centro'
+    ).state
+    expect(bus.clock.minuteOfDay).toBe(368)
+    expect(bus.player).toMatchObject({ transit: 500, energy: 57 })
+  })
+
+  it('allows free modes without Bilhete credit and explains exhausted routes', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    const cycling = {
+      ...base,
+      place: 'a',
+      player: { ...base.player, preferredTravelMode: 'bike' as const },
+    }
+    expect(
+      session.availableActions(cycling).find((action) => action.id === 'travel:centro')
+    ).toMatchObject({
+      enabled: true,
+      label: 'Bike · 47 min → Centro',
+    })
+    const exhausted = {
+      ...cycling,
+      player: { ...cycling.player, energy: 2 },
+    }
+    expect(
+      session.availableActions(exhausted).find((action) => action.id === 'travel:centro')
+    ).toMatchObject({
+      enabled: false,
+      lockedReason: 'sem disposição para o trajeto',
+    })
   })
 
   it('runs once-only place actions and consumable items', () => {

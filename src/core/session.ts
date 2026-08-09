@@ -25,6 +25,7 @@ import {
   spendEnergy,
 } from './economy/economy.js'
 import { isFlagTrue, withFlag, type GameState } from './state/state.js'
+import { estimateCommute, type TravelMode } from './life/commute.js'
 
 /**
  * The one surface everything drives the game through.
@@ -80,6 +81,22 @@ const SECONDS_PER_ACTION: Record<Action['kind'], number> = {
   placeAction: 6,
   battle: 7,
   useItem: 4,
+}
+
+const TRAVEL_MODE_LABEL: Readonly<Record<TravelMode, string>> = {
+  walk: 'A pé',
+  bike: 'Bike',
+  bus: 'Busão',
+  metro: 'Metrô',
+}
+
+function commuteFor(state: GameState) {
+  const hour = Math.floor(state.clock.minuteOfDay / 60)
+  return estimateCommute(state.player.preferredTravelMode, {
+    referenceMinutes: 45,
+    peak: (hour >= 7 && hour < 10) || (hour >= 17 && hour < 20),
+    raining: true,
+  })
 }
 
 export class GameSession {
@@ -279,11 +296,14 @@ export class GameSession {
         const target = this.content.districts[targetId]
         if (!target) continue
         const unlocked = evaluateAll(state, target.unlockedBy)
-        const affordable = canRide(state)
-        const enabled = unlocked && affordable
+        const commute = commuteFor(state)
+        const needsCredit = commute.mode === 'bus' || commute.mode === 'metro'
+        const affordable = !needsCredit || canRide(state, commute.cost)
+        const rested = state.player.energy >= commute.energy
+        const enabled = unlocked && affordable && rested
         actions.push({
           id: `travel:${targetId}`,
-          label: `Metrô/ônibus → ${target.name}`,
+          label: `${TRAVEL_MODE_LABEL[commute.mode]} · ${commute.minutes} min → ${target.name}`,
           action: { kind: 'travel', to: targetId },
           enabled,
           ...(enabled
@@ -291,7 +311,9 @@ export class GameSession {
             : {
                 lockedReason: !affordable
                   ? 'sem crédito no Bilhete'
-                  : 'você ainda não sabe chegar lá',
+                  : !rested
+                    ? 'sem disposição para o trajeto'
+                    : 'você ainda não sabe chegar lá',
               }),
           group: 'move',
         })
@@ -379,15 +401,18 @@ export class GameSession {
         const currentDistrict = this.content.districts[state.district]
         if (!currentDistrict?.connections.includes(action.to)) return { state, events: [] }
         if (!target || !evaluateAll(state, target.unlockedBy)) return { state, events: [] }
-        if (!canRide(state)) return { state, events: [] }
+        const commute = commuteFor(state)
+        const needsCredit = commute.mode === 'bus' || commute.mode === 'metro'
+        if (needsCredit && !canRide(state, commute.cost)) return { state, events: [] }
+        if (state.player.energy < commute.energy) return { state, events: [] }
 
         const stationId = target.places.find((p) => this.content.places[p]?.station)
         const arrival = stationId ?? target.places[0]
         if (!arrival) throw new Error(`District "${action.to}" has no places`)
 
-        let next = payFare(state)
-        next = spendEnergy(next, 4)
-        next = advanceMinutes(next, 45)
+        let next = needsCredit ? payFare(state, commute.cost) : state
+        next = spendEnergy(next, commute.energy)
+        next = advanceMinutes(next, commute.minutes)
         next = {
           ...next,
           district: target.id,
