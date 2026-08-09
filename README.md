@@ -72,6 +72,10 @@ atual. As imagens abaixo são renderizações reais do jogo em 1280×720, não m
 
 Para regenerar as capturas, execute `npm run playtest:visual`, inspecione os 11 PNGs em `playtest-report/screenshots/` e copie as versões aprovadas para `docs/screenshots/`. Capturas visuais não devem ser publicadas sem inspeção humana ou visual do resultado.
 
+O [scorecard visual](docs/VISUAL_SCORECARD.md) define as cenas canônicas, o
+baseline reproduzível, os gates objetivos e a rubrica humana usada para decidir
+se uma mudança realmente melhora o jogo.
+
 ## Arquitetura
 
 O jogo tem uma única API de regras: `GameSession`. Phaser e o bot headless consultam `availableActions(state)` e executam `perform(state, action)`. Assim, um caminho que o bot testa é o mesmo caminho usado pelo jogador.
