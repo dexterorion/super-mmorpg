@@ -13,7 +13,10 @@ async function action(page: Page, id: string): Promise<void> {
 test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName }) => {
   const errors: string[] = []
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(message.text())
+    const text = message.text()
+    const firefoxNavigationAbort =
+      browserName === 'firefox' && text.includes('InvalidStateError: Navigated away from page')
+    if (message.type() === 'error' && !firefoxNavigationAbort) errors.push(text)
   })
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
