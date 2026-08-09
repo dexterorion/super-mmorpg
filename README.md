@@ -28,6 +28,9 @@ O áudio começa após a primeira interação, como exigido pelos navegadores. O
 
 ## Screenshots
 
+Capturas atualizadas em 9 de agosto de 2026 pelo playthrough automatizado da versão
+atual. As imagens abaixo são renderizações reais do jogo em 1280×720, não mockups.
+
 | Título                                | Desenrolo                                    |
 | ------------------------------------- | -------------------------------------------- |
 | ![Título](docs/screenshots/title.png) | ![Desenrolo](docs/screenshots/desenrolo.png) |
@@ -80,6 +83,7 @@ npm run build
 `npm run verify` executa as verificações rápidas sem o Playwright. Os workflows CI, E2E e Security repetem a validação em GitHub Actions.
 
 O histórico de rodadas e correções está em [PLAYTEST_LOG.md](PLAYTEST_LOG.md). Para contribuir, consulte [CONTRIBUTING.md](CONTRIBUTING.md).
+O desenvolvimento em andamento pode ser acompanhado nas [GitHub Issues](https://github.com/dexterorion/super-mmorpg/issues).
 
 ## Princípios do jogo
 
