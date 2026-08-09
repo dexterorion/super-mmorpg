@@ -42,6 +42,8 @@ GAROA, removida de fundo cromático e normalizada para a grade 12×6 de 128×170
   `public/assets/kenney-rpg-urban/`.
 
 O pacote passa a fornecer uma única grade visual de 16×16 para cidade, player,
-NPCs, veículos e mobiliário. Pedestres decorativos e personagens interativos
-compartilham proporção, contorno e paleta; somente os interativos recebem rótulo,
-colisão e diálogo.
+NPCs, veículos e mobiliário. Os oito mapas de distrito são montados de forma
+determinística diretamente dessa grade, em escala inteira de 2×, sem recortar ou
+distorcer o cenário de demonstração. Pedestres decorativos e personagens
+interativos compartilham proporção, contorno e paleta; somente os interativos
+recebem rótulo, colisão e diálogo.

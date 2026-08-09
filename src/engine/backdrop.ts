@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { CITY_MAP_HEIGHT, CITY_MAP_WIDTH, cityMapFor } from './cityMaps.js'
 
 export interface WorldActor {
   readonly id: string
@@ -41,8 +42,8 @@ class Bridge {
 
 const bridge = new Bridge()
 const TILE = 32
-const MAP_WIDTH = 24
-const MAP_HEIGHT = 15
+const MAP_WIDTH = CITY_MAP_WIDTH
+const MAP_HEIGHT = CITY_MAP_HEIGHT
 
 export class WorldScene extends Phaser.Scene {
   private player?: Phaser.Physics.Arcade.Sprite
@@ -61,7 +62,6 @@ export class WorldScene extends Phaser.Scene {
   }
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
-    this.load.image('kenney-city', 'assets/kenney-rpg-urban/city-background.png')
     this.load.spritesheet('kenney-people', 'assets/kenney-rpg-urban/Tilemap/tilemap.png', {
       frameWidth: 16,
       frameHeight: 16,
@@ -94,9 +94,10 @@ export class WorldScene extends Phaser.Scene {
     this.exits = this.physics.add.staticGroup()
     const palette = districtPalette(bridge.presentation.district)
     this.cameras.main.setBackgroundColor(palette.void)
-    drawMap(this, palette, bridge.presentation.placeId, bridge.presentation.district)
+    const map = cityMapFor(bridge.presentation.district)
+    drawMap(this, palette, bridge.presentation.placeId, map)
     this.createBorders(palette)
-    this.createCollisionMap()
+    this.createCollisionMap(map.collisions)
     this.createExits(bridge.presentation.exits)
     this.createActors(bridge.presentation.actors)
     this.player = this.physics.add
@@ -123,10 +124,14 @@ export class WorldScene extends Phaser.Scene {
       }
     }
   }
-  private createCollisionMap(): void {
-    this.obstacleRect(290, 88, 215, 278)
-    this.obstacleRect(518, 88, 250, 278)
-    this.obstacleRect(0, 0, 135, 362)
+  private createCollisionMap(collisions: ReturnType<typeof cityMapFor>['collisions']): void {
+    for (const collision of collisions)
+      this.obstacleRect(
+        collision.x * TILE,
+        collision.y * TILE,
+        collision.width * TILE,
+        collision.height * TILE
+      )
   }
   private createExits(exits: readonly WorldExit[]): void {
     exits.forEach((exit, index) => {
@@ -314,14 +319,28 @@ function districtPalette(district: string): Palette {
       prop: 0x485270,
       accent: 0xffe3ad,
     },
+    ibirapuera: {
+      void: 0x101923,
+      floor: 0x57a17f,
+      floorAlt: 0x347068,
+      wall: 0x214a48,
+      prop: 0x8fc898,
+      accent: 0xf3c969,
+    },
   }
   return options[district] ?? options.tiete!
 }
-function drawMap(scene: Phaser.Scene, palette: Palette, placeId: string, district: string): void {
-  scene.add
-    .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'kenney-city')
-    .setDisplaySize(MAP_WIDTH * TILE, MAP_HEIGHT * TILE)
-    .setDepth(0)
+function drawMap(
+  scene: Phaser.Scene,
+  palette: Palette,
+  placeId: string,
+  map: ReturnType<typeof cityMapFor>
+): void {
+  for (const entry of map.tiles)
+    scene.add
+      .sprite((entry.x + 0.5) * TILE, (entry.y + 0.5) * TILE, 'kenney-people', entry.frame)
+      .setScale(2)
+      .setDepth(entry.depth ?? 0)
   scene.add
     .rectangle(
       MAP_WIDTH * TILE * 0.5,
@@ -332,7 +351,7 @@ function drawMap(scene: Phaser.Scene, palette: Palette, placeId: string, distric
       0.3
     )
     .setDepth(1)
-  drawLandmark(scene, district)
+  drawLandmark(scene, map)
   const rain = scene.add.graphics().setDepth(2)
   rain.lineStyle(1, 0xa7b2b5, 0.28)
   for (let x = -MAP_HEIGHT * TILE; x < MAP_WIDTH * TILE; x += 38)
@@ -348,40 +367,31 @@ function drawMap(scene: Phaser.Scene, palette: Palette, placeId: string, distric
     .setDepth(3)
 }
 
-function drawLandmark(scene: Phaser.Scene, district: string): void {
-  const labels: Record<string, readonly [string, number]> = {
-    tiete: ['RODOVIÁRIA · METRÔ', 0xf3c969],
-    centro: ['CENTRO · VALE DO ANHANGABAÚ', 0xd97963],
-    bixiga: ['BIXIGA · CANTINAS', 0xdb9772],
-    liberdade: ['LIBERDADE · 東洋街', 0xe95d5d],
-    paulista: ['AV. PAULISTA · MASP', 0xf2e3ad],
-    zona_leste: ['ZONA LESTE · RADIAL', 0x91b0a9],
-    minhocao: ['MINHOCÃO · ELEVADO', 0xffe3ad],
-  }
-  const [label, color] = labels[district] ?? labels.tiete!
+function drawLandmark(scene: Phaser.Scene, map: ReturnType<typeof cityMapFor>): void {
+  const color = districtPalette(map.id).accent
   scene.add
     .rectangle(MAP_WIDTH * TILE * 0.5, 54, 250, 28, 0x101923, 0.9)
     .setStrokeStyle(2, color)
     .setDepth(3)
   scene.add
-    .text(MAP_WIDTH * TILE * 0.5, 54, label, {
+    .text(MAP_WIDTH * TILE * 0.5, 54, map.landmark, {
       fontFamily: 'monospace',
       fontSize: '11px',
       color: `#${color.toString(16).padStart(6, '0')}`,
     })
     .setOrigin(0.5)
     .setDepth(4)
-  if (district === 'liberdade') {
+  if (map.id === 'liberdade') {
     for (const x of [180, 240, 300, 468, 528, 588])
       scene.add.circle(x, 94, 7, 0xd84b4b).setStrokeStyle(2, 0xf3c969).setDepth(3)
   }
-  if (district === 'paulista') {
+  if (map.id === 'paulista') {
     scene.add.rectangle(384, 190, 160, 8, 0xc94343).setDepth(3)
     scene.add.rectangle(324, 218, 8, 58, 0xc94343).setDepth(3)
     scene.add.rectangle(444, 218, 8, 58, 0xc94343).setDepth(3)
   }
-  if (district === 'zona_leste') scene.add.rectangle(384, 420, 768, 120, 0x3e6970, 0.42).setDepth(2)
-  if (district === 'minhocao') scene.add.rectangle(384, 116, 768, 34, 0x485270, 0.88).setDepth(3)
+  if (map.id === 'zona_leste') scene.add.rectangle(384, 420, 768, 120, 0x3e6970, 0.42).setDepth(2)
+  if (map.id === 'minhocao') scene.add.rectangle(384, 116, 768, 34, 0x485270, 0.88).setDepth(3)
 }
 function directionFrame(direction: 'down' | 'left' | 'right' | 'up', step: number): number {
   return 23 + { left: 0, down: 1, up: 2, right: 3 }[direction] + step * 27
