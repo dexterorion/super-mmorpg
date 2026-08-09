@@ -61,6 +61,7 @@ export class WorldScene extends Phaser.Scene {
   }
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
+    this.load.image('fisherg-city', 'assets/fisherg-city/sMockup.png')
   }
   create(): void {
     bridge.scene = this
@@ -92,7 +93,7 @@ export class WorldScene extends Phaser.Scene {
     this.createExits(bridge.presentation.exits)
     this.createActors(bridge.presentation.actors)
     this.player = this.physics.add
-      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.62, 'garoa', 'protagonista_down_0')
+      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'garoa', 'protagonista_down_0')
       .setScale(1.6)
     this.player.setSize(12, 10).setOffset(10, 20).setCollideWorldBounds(true).setDepth(10)
     this.physics.add.collider(this.player, this.obstacles)
@@ -162,8 +163,8 @@ export class WorldScene extends Phaser.Scene {
   }
   private createActors(actors: readonly WorldActor[]): void {
     actors.forEach((actor, index) => {
-      const x = (8 + ((index * 6) % 10)) * TILE
-      const y = (9 + (index % 2) * 2) * TILE
+      const x = (index % 2 === 0 ? 18 : 6) * TILE
+      const y = 10.5 * TILE
       const frame = actor.kind === 'npc' ? npcFrame(actor.id) : 'banca_jornal'
       const sprite = this.physics.add.staticSprite(x, y, 'garoa', frame).setScale(1.5).setDepth(8)
       sprite.setData('actionId', actor.id)
@@ -187,6 +188,7 @@ export class WorldScene extends Phaser.Scene {
     const rectangle = this.add
       .rectangle((tileX + width / 2) * TILE, (tileY + 0.5) * TILE, width * TILE, TILE, color)
       .setStrokeStyle(2, 0x101923)
+      .setVisible(false)
       .setDepth(4)
     this.physics.add.existing(rectangle, true)
     this.obstacles?.add(rectangle)
@@ -317,31 +319,33 @@ function districtPalette(district: string): Palette {
   return options[district] ?? options.tiete!
 }
 function drawMap(scene: Phaser.Scene, palette: Palette, placeId: string): void {
-  const graphics = scene.add.graphics().setDepth(0)
-  for (let y = 0; y < MAP_HEIGHT; y += 1)
-    for (let x = 0; x < MAP_WIDTH; x += 1) {
-      graphics
-        .fillStyle((x + y) % 2 === 0 ? palette.floor : palette.floorAlt)
-        .fillRect(x * TILE, y * TILE, TILE, TILE)
-      graphics.lineStyle(1, palette.void, 0.16).strokeRect(x * TILE, y * TILE, TILE, TILE)
-      const street = x >= 10 && x <= 13
-      scene.add
-        .image(
-          (x + 0.5) * TILE,
-          (y + 0.5) * TILE,
-          'garoa',
-          street ? 'asfalto_molhado' : 'calcada_portuguesa'
-        )
-        .setAlpha(street ? 0.48 : 0.18)
-        .setDepth(1)
-    }
   scene.add
-    .text(14, MAP_HEIGHT * TILE - 22, placeId.replaceAll('_', ' ').toUpperCase(), {
+    .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'fisherg-city')
+    .setDisplaySize(MAP_WIDTH * TILE, MAP_HEIGHT * TILE)
+    .setDepth(0)
+  scene.add
+    .rectangle(
+      MAP_WIDTH * TILE * 0.5,
+      MAP_HEIGHT * TILE * 0.5,
+      MAP_WIDTH * TILE,
+      MAP_HEIGHT * TILE,
+      palette.void,
+      0.3
+    )
+    .setDepth(1)
+  const rain = scene.add.graphics().setDepth(2)
+  rain.lineStyle(1, 0xa7b2b5, 0.28)
+  for (let x = -MAP_HEIGHT * TILE; x < MAP_WIDTH * TILE; x += 38)
+    rain.lineBetween(x, 0, x + MAP_HEIGHT * TILE * 0.35, MAP_HEIGHT * TILE)
+  scene.add
+    .text(14, MAP_HEIGHT * TILE - 25, placeId.replaceAll('_', ' ').toUpperCase(), {
       fontFamily: 'monospace',
       fontSize: '10px',
-      color: '#101923',
+      color: '#f0eadb',
+      backgroundColor: '#101923cc',
+      padding: { x: 5, y: 3 },
     })
-    .setDepth(2)
+    .setDepth(3)
 }
 function npcFrame(actionId: string): string {
   const id = actionId.replace('talk:', '')
