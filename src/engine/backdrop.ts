@@ -101,7 +101,7 @@ export class WorldScene extends Phaser.Scene {
     this.createActors(bridge.presentation.actors)
     this.player = this.physics.add
       .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'kenney-people', 24)
-      .setScale(1.5)
+      .setScale(4 / 3)
     this.player.setSize(10, 6).setOffset(3, 10).setCollideWorldBounds(true).setDepth(10)
     this.physics.add.collider(this.player, this.obstacles)
     this.physics.add.collider(this.player, this.actors)
@@ -157,7 +157,7 @@ export class WorldScene extends Phaser.Scene {
       const y = 12.1 * TILE
       const sprite = this.physics.add
         .staticSprite(x, y, 'kenney-people', npcFrame(actor.id))
-        .setScale(1.5)
+        .setScale(4 / 3)
         .setDepth(8)
       sprite.setData('actionId', actor.id)
       sprite.setData('label', actor.label)
