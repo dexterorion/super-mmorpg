@@ -50,6 +50,9 @@ jobs:
       - name: Headless playtest (softlock / completability / economy)
         run: npm run playtest -- --runs 500
 
+      - name: Life-year playtest (daily / monthly idempotency)
+        run: npm run playtest:life
+
       - name: Build
         run: npx vite build
 
@@ -63,6 +66,14 @@ jobs:
           name: coverage
           path: coverage/
           retention-days: 7
+
+      - name: Upload life-year report
+        if: matrix.node == 24
+        uses: actions/upload-artifact@v4
+        with:
+          name: life-year-report
+          path: playtest-report/life-year.json
+          retention-days: 14
 
       - name: Upload dist
         if: matrix.node == 24

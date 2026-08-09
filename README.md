@@ -106,6 +106,7 @@ npm run format:check
 npm run test:coverage
 npm run art:build
 npm run playtest -- --runs 1000
+npm run playtest:life
 npm run playtest:visual
 npm run build
 ```

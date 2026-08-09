@@ -189,6 +189,29 @@ function playableContent(): ContentBundle {
 }
 
 describe('GameSession actions', () => {
+  it('exposes agenda actions through the shared session API', () => {
+    const session = new GameSession(playableContent())
+    const state = {
+      ...createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 }),
+      place: 'a',
+      mode: { kind: 'world' as const },
+    }
+    const actions = session.availableActions(state)
+    expect(actions).toContainEqual(expect.objectContaining({ id: 'agenda:work', enabled: true }))
+    expect(actions).toContainEqual(
+      expect.objectContaining({
+        id: 'agenda:study',
+        enabled: false,
+        lockedReason: 'matrícula necessária',
+      })
+    )
+    const worked = session.performById(state, 'agenda:work')
+    expect(worked.events).toContainEqual(
+      expect.objectContaining({ type: 'agendaActivity', activity: 'work' })
+    )
+    expect(session.performById(worked.state, 'agenda:work').state).toBe(worked.state)
+  })
+
   it('lists world actions and refuses disabled stable ids', () => {
     const session = new GameSession(playableContent())
     const state = { ...createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 }), place: 'a' }

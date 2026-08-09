@@ -29,6 +29,14 @@ import { estimateCommute, type TravelMode } from './life/commute.js'
 import { advanceEducation } from './life/education.js'
 import { applyDueConjuncture } from './life/conjuncture.js'
 import {
+  agenda,
+  canSchedule,
+  closeDay,
+  hasScheduled,
+  scheduleActivity,
+  type AgendaActivity,
+} from './life/calendar.js'
+import {
   assessFamilyImpact,
   beginPartnership,
   decideChildren,
@@ -65,6 +73,12 @@ export type Action =
   | { readonly kind: 'battle'; readonly move: DesenroloAction }
   | { readonly kind: 'useItem'; readonly itemId: ItemId }
   | {
+      readonly kind: 'agenda'
+      readonly decision:
+        | { readonly kind: 'activity'; readonly activity: AgendaActivity }
+        | { readonly kind: 'closeDay' }
+    }
+  | {
       readonly kind: 'family'
       readonly decision:
         | { readonly kind: 'beginPartnership'; readonly partnerNpcId: NpcId }
@@ -82,7 +96,7 @@ export interface AvailableAction {
   readonly enabled: boolean
   readonly lockedReason?: string
   /** Grouping hint for the UI. */
-  readonly group: 'dialogue' | 'move' | 'people' | 'act' | 'battle' | 'item' | 'life'
+  readonly group: 'dialogue' | 'move' | 'people' | 'act' | 'battle' | 'item' | 'life' | 'agenda'
 }
 
 export interface PerformResult {
@@ -101,6 +115,7 @@ const SECONDS_PER_ACTION: Record<Action['kind'], number> = {
   battle: 7,
   useItem: 4,
   family: 9,
+  agenda: 5,
 }
 
 const TRAVEL_MODE_LABEL: Readonly<Record<TravelMode, string>> = {
@@ -342,6 +357,38 @@ export class GameSession {
     return actions
   }
 
+  private agendaActions(state: GameState): readonly AvailableAction[] {
+    const actions: AvailableAction[] = (Object.keys(agenda) as AgendaActivity[]).map((activity) => {
+      const available = canSchedule(state, activity)
+      const alreadyDone = hasScheduled(state, activity)
+      return {
+        id: `agenda:${activity}`,
+        label: `${agenda[activity].label} · ${formatDuration(agenda[activity].minutes)}`,
+        action: { kind: 'agenda', decision: { kind: 'activity', activity } },
+        enabled: available,
+        ...(available
+          ? {}
+          : {
+              lockedReason:
+                activity === 'study' && state.education?.status !== 'active'
+                  ? 'matrícula necessária'
+                  : alreadyDone
+                    ? 'já feito hoje'
+                    : 'sem disposição',
+            }),
+        group: 'agenda',
+      }
+    })
+    actions.push({
+      id: 'agenda:close-day',
+      label: 'Encerrar o dia',
+      action: { kind: 'agenda', decision: { kind: 'closeDay' } },
+      enabled: true,
+      group: 'agenda',
+    })
+    return actions
+  }
+
   familyImpact(state: GameState) {
     const comfortByHousing: Record<string, number> = {
       pensao_bixiga: 2,
@@ -471,6 +518,7 @@ export class GameSession {
     }
 
     actions.push(...this.familyActions(state))
+    actions.push(...this.agendaActions(state))
 
     return actions
   }
@@ -596,6 +644,10 @@ export class GameSession {
 
       case 'family':
         return this.performFamily(state, action.decision)
+      case 'agenda':
+        return action.decision.kind === 'closeDay'
+          ? closeDay(state)
+          : scheduleActivity(state, action.decision.activity)
     }
   }
 

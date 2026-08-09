@@ -22,6 +22,7 @@
     "test:coverage": "vitest run --coverage",
     "art:build": "tsx tools/art/build.ts",
     "playtest": "tsx tools/playtest/run.ts",
+    "playtest:life": "tsx tools/playtest/life-year.ts",
     "playtest:visual": "playwright test",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run playtest"
   },
