@@ -173,10 +173,23 @@ button:disabled {
 button small {
   color: var(--mist);
 }
-.menu-button {
+.utility-buttons {
   position: fixed;
   right: 24px;
   bottom: 24px;
+  display: flex;
+  gap: 8px;
+}
+.utility-buttons .menu-button,
+.sound-button {
+  position: static;
+}
+.sound-button {
+  color: var(--amber);
+  background: rgba(16, 25, 35, 0.96);
+  border: 2px solid #718493;
+  padding: 11px 15px;
+  cursor: pointer;
 }
 .menu,
 .debug {

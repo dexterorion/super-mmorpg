@@ -6,6 +6,7 @@ import { AUTOSAVE_SLOT, load, save, SLOTS, type Slot } from './core/save/save.js
 import { getView as dialogueView } from './core/dialogue/dialogue.js'
 import { getView as battleView } from './core/desenrolo/desenrolo.js'
 import { mountBackdrop } from './engine/backdrop.js'
+import { AudioDirector } from './engine/audio.js'
 import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.js'
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
@@ -13,6 +14,7 @@ const root = document.querySelector<HTMLElement>('#app')!
 root.innerHTML =
   '<div id="game-canvas" aria-hidden="true"></div><div id="world-prompt"></div><section id="ui"></section>'
 const world = mountBackdrop('game-canvas')
+const audio = new AudioDirector()
 const ui = document.querySelector<HTMLElement>('#ui')!
 const worldPrompt = document.querySelector<HTMLElement>('#world-prompt')!
 const session = new GameSession(content)
@@ -37,6 +39,7 @@ function period(value: GameState['clock']['period']): string {
   return { morning: 'Manhã', afternoon: 'Tarde', night: 'Noite' }[value]
 }
 function start(): void {
+  audio.start()
   const created = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 42 })
   state = session.begin(created).state
   previousPeriod = state.clock.period
@@ -44,6 +47,7 @@ function start(): void {
   render()
 }
 function continueGame(): void {
+  audio.start()
   const loaded = saveSlots.map((slot) => load(storage, slot)).find((candidate) => candidate.ok)
   if (!loaded?.ok) return
   state = session.begin(loaded.state).state
@@ -52,6 +56,7 @@ function continueGame(): void {
 }
 function act(actionId: string): void {
   if (!state) return
+  audio.cue(actionId)
   const before = state
   state = session.performById(state, actionId).state
   telemetry.emit({
@@ -102,7 +107,7 @@ function render(): void {
         : battle
           ? `<strong>${battle.transcript.at(-1)?.text ?? battle.subtitle ?? ''}</strong><span>Paciência ${battle.patience}/${battle.patienceMax} · turno ${battle.turn}</span>`
           : `<strong>${content.places[state.place]?.blurb ?? 'Explore o bairro.'}</strong><span>Ande com as setas/WASD. Aproxime-se e use Espaço.</span>`
-  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${period(state.clock.period)}</b></span></header><section class="scene ${exploring ? 'exploring' : ''}"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions ${exploring ? 'world-actions' : ''}">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><button class="menu-button" data-command="menu">Caderninho</button>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
+  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${period(state.clock.period)}</b></span></header><section class="scene ${exploring ? 'exploring' : ''}"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions ${exploring ? 'world-actions' : ''}">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><div class="utility-buttons"><button class="sound-button" data-command="sound" aria-label="${audio.isMuted() ? 'Ativar som' : 'Silenciar som'}">${audio.isMuted() ? 'SOM OFF' : 'SOM ON'}</button><button class="menu-button" data-command="menu">Caderninho</button></div>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
   bind()
   world.sync({
     placeId: state.place,
@@ -120,6 +125,7 @@ function render(): void {
       .map((item) => ({ actionId: item.id, label: item.label })),
     enabled: exploring && !menuOpen,
   })
+  audio.sync({ district: state.district, period: state.clock.period, mode: state.mode.kind })
 }
 function endingTitle(id: string): string {
   return (
@@ -147,6 +153,11 @@ function bind(): void {
   )
   ui.querySelector('[data-command="new"]')?.addEventListener('click', start)
   ui.querySelector('[data-command="continue"]')?.addEventListener('click', continueGame)
+  ui.querySelector('[data-command="sound"]')?.addEventListener('click', () => {
+    audio.start()
+    audio.toggle()
+    render()
+  })
   ui.querySelectorAll('[data-command="menu"]').forEach((button) =>
     button.addEventListener('click', () => {
       menuOpen = !menuOpen
@@ -171,7 +182,11 @@ window.addEventListener('keydown', (event) => {
     return
   }
   if (!state || menuOpen) return
-  if (state.mode.kind === 'world') return
+  if (state.mode.kind === 'world') {
+    if (['ArrowDown', 's', 'ArrowRight', 'd', 'ArrowUp', 'w', 'ArrowLeft', 'a'].includes(event.key))
+      audio.cue('footstep')
+    return
+  }
   const actions = session.availableActions(state).filter((item) => item.enabled)
   if (['ArrowDown', 's', 'ArrowRight', 'd'].includes(event.key)) {
     event.preventDefault()

@@ -6,7 +6,7 @@ Um RPG 2D sobre chegar a São Paulo às 5h da manhã com R$ 340, o endereço de 
 
 ## Estado do jogo
 
-A campanha completa, em cinco atos, é jogável do começo ao fim no navegador. Ela atravessa Tietê, Centro, Bixiga, Liberdade, Paulista, Zona Leste e Minhocão, com diálogos ramificados, transporte público, saves, Caderninho e seis **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa.
+A campanha completa, em cinco atos, é jogável do começo ao fim no navegador. Ela atravessa Tietê, Centro, Bixiga, Liberdade, Paulista, Zona Leste e Minhocão, com diálogos ramificados, transporte público, saves, Caderninho e seis **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa. Música procedural, garoa, tráfego e efeitos reagem ao bairro, período e modo de jogo.
 
 Uma escolha na Horizonte Urbano e o destino de Val formam quatro finais distintos.
 
@@ -23,6 +23,8 @@ npm run dev
 ```
 
 Abra `http://localhost:5173`. Use setas ou WASD para navegar, Enter/Espaço para escolher, Esc para abrir o Caderninho e F3 para o overlay de debug. Mouse e gamepad também são aceitos.
+
+O áudio começa após a primeira interação, como exigido pelos navegadores. O botão `SOM ON/OFF` controla música, ambiência e efeitos em conjunto.
 
 ## Screenshots
 
