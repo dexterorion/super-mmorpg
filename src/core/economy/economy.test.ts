@@ -3,6 +3,7 @@ import { createInitialState, type GameState } from '../state/state.js'
 import {
   FARE,
   addMoney,
+  advanceMinutes,
   advancePeriod,
   awardSavvy,
   canAfford,
@@ -10,6 +11,7 @@ import {
   formatMoney,
   isExhausted,
   nextPeriod,
+  periodAt,
   payFare,
   restoreEnergy,
   sleep,
@@ -114,14 +116,27 @@ describe('clock', () => {
   it('advancing past night rolls the day over', () => {
     let next = state
     for (let i = 0; i < 3; i++) next = advancePeriod(next)
-    expect(next.clock).toEqual({ day: 2, period: 'morning' })
+    expect(next.clock).toEqual({ day: 2, period: 'morning', minuteOfDay: 360 })
+  })
+
+  it('advances exact minutes through periods and midnight', () => {
+    expect(periodAt(310)).toBe('morning')
+    expect(periodAt(800)).toBe('afternoon')
+    expect(periodAt(1200)).toBe('night')
+    const late = { ...state, clock: { day: 3, period: 'night' as const, minuteOfDay: 1420 } }
+    expect(advanceMinutes(late, 35).clock).toEqual({
+      day: 4,
+      period: 'night',
+      minuteOfDay: 15,
+    })
+    expect(() => advanceMinutes(state, -1)).toThrow(/non-negative integer/)
   })
 
   it('sleeping in a bed restores fully and wakes the next morning', () => {
     const tired = spendEnergy(state, 50)
     const rested = sleep(tired, 'bed')
     expect(rested.player.energy).toBe(state.player.energyMax)
-    expect(rested.clock).toEqual({ day: 2, period: 'morning' })
+    expect(rested.clock).toEqual({ day: 2, period: 'morning', minuteOfDay: 420 })
   })
 
   it('a rough night restores much less than a bed', () => {

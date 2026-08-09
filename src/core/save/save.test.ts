@@ -94,6 +94,14 @@ describe('serialize / deserialize', () => {
     })
   })
 
+  it('migrates a v3 save to the minute clock', () => {
+    const oldState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    delete (oldState.clock as Record<string, unknown>).minuteOfDay
+    const result = deserialize(JSON.stringify({ version: 3, savedAt: 1, state: oldState }))
+    expect(result).toMatchObject({ ok: true, migrated: true })
+    if (result.ok) expect(result.state.clock.minuteOfDay).toBe(310)
+  })
+
   it('reports unparseable text as corrupt instead of throwing', () => {
     const result = deserialize('{{{not json')
     expect(result).toMatchObject({ ok: false, reason: 'corrupt' })

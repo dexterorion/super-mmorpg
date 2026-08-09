@@ -218,7 +218,7 @@ describe('GameSession actions', () => {
     expect(session.perform(state, { kind: 'walk', to: 'missing' }).state.place).toBe('a')
   })
 
-  it('travels only from a station with credit and advances the period', () => {
+  it('travels only from a station with credit and advances exact time', () => {
     const session = new GameSession(playableContent())
     const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
     const state = { ...base, place: 'a', player: { ...base.player, transit: 1_000 } }
@@ -226,7 +226,7 @@ describe('GameSession actions', () => {
     expect(result.state).toMatchObject({
       district: 'centro',
       place: 'c',
-      clock: { period: 'afternoon' },
+      clock: { period: 'morning', minuteOfDay: 355 },
     })
     const revisiting = session.performById(
       { ...state, visitedDistricts: ['tiete', 'centro'] },

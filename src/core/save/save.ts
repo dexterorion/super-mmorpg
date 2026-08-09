@@ -69,6 +69,10 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
       monthlyRent: 95_000,
     },
   }),
+  3: (raw) => ({
+    ...raw,
+    clock: { ...(raw.clock as object), minuteOfDay: 310 },
+  }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -225,6 +229,9 @@ function isGameState(value: unknown): value is GameState {
     typeof value.player.energyMax === 'number' &&
     typeof value.clock.day === 'number' &&
     isOneOf(value.clock.period, ['morning', 'afternoon', 'night']) &&
+    typeof value.clock.minuteOfDay === 'number' &&
+    value.clock.minuteOfDay >= 0 &&
+    value.clock.minuteOfDay < 1440 &&
     typeof value.act === 'number' &&
     [1, 2, 3, 4, 5].includes(value.act) &&
     isMode(value.mode) &&

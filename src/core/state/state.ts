@@ -27,7 +27,7 @@ import type { DesenroloBattle } from '../desenrolo/battle.js'
  * — which is how we search for softlocks without replaying from the start.
  */
 
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 export interface PlayerStats {
   /** Manha — the level. Rises by learning about the city, never by fighting. */
@@ -65,6 +65,7 @@ export interface PlayerState {
 export interface Clock {
   readonly day: number
   readonly period: Period
+  readonly minuteOfDay: number
 }
 
 export interface QuestProgress {
@@ -170,7 +171,7 @@ export function createInitialState(options: NewGameOptions): GameState {
       energyMax: profile?.energy ?? STARTING_ENERGY,
       transit: 0,
     },
-    clock: { day: 1, period: 'morning' },
+    clock: { day: 1, period: 'morning', minuteOfDay: 310 },
     act: 1,
     mode: { kind: 'world' },
     battle: null,

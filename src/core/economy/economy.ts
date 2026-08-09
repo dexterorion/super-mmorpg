@@ -106,12 +106,34 @@ export function nextPeriod(period: Period): { period: Period; rolledOver: boolea
   return { period: PERIODS[nextIndex]!, rolledOver: nextIndex === 0 }
 }
 
+export function periodAt(minuteOfDay: number): Period {
+  if (minuteOfDay >= 300 && minuteOfDay < 720) return 'morning'
+  if (minuteOfDay >= 720 && minuteOfDay < 1080) return 'afternoon'
+  return 'night'
+}
+
+export function advanceMinutes(state: GameState, minutes: number): GameState {
+  if (!Number.isSafeInteger(minutes) || minutes < 0)
+    throw new RangeError(`Minutes must be a non-negative integer, received ${minutes}`)
+  const total = state.clock.minuteOfDay + minutes
+  const minuteOfDay = total % 1440
+  return {
+    ...state,
+    clock: {
+      day: state.clock.day + Math.floor(total / 1440),
+      minuteOfDay,
+      period: periodAt(minuteOfDay),
+    },
+  }
+}
+
 /** Advances the clock by one period, rolling into the next day at night's end. */
 export function advancePeriod(state: GameState): GameState {
   const { period, rolledOver } = nextPeriod(state.clock.period)
+  const minuteOfDay = { morning: 360, afternoon: 720, night: 1080 }[period]
   return {
     ...state,
-    clock: { day: state.clock.day + (rolledOver ? 1 : 0), period },
+    clock: { day: state.clock.day + (rolledOver ? 1 : 0), period, minuteOfDay },
   }
 }
 
@@ -132,7 +154,7 @@ export function sleep(state: GameState, quality: 'bed' | 'couch' | 'rough' = 'be
 
   return {
     ...state,
-    clock: { day, period: 'morning' },
+    clock: { day, period: 'morning', minuteOfDay: 420 },
     player: { ...state.player, energy: clamp(energy, 0, state.player.energyMax) },
   }
 }

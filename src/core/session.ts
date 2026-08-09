@@ -16,7 +16,14 @@ import { describeUnmet, evaluate, evaluateAll } from './rules/conditions.js'
 import { applyEffects } from './rules/effects.js'
 import * as dialogue from './dialogue/dialogue.js'
 import * as desenrolo from './desenrolo/desenrolo.js'
-import { advancePeriod, canRide, isExhausted, payFare, spendEnergy } from './economy/economy.js'
+import {
+  advanceMinutes,
+  advancePeriod,
+  canRide,
+  isExhausted,
+  payFare,
+  spendEnergy,
+} from './economy/economy.js'
 import { isFlagTrue, withFlag, type GameState } from './state/state.js'
 
 /**
@@ -359,6 +366,7 @@ export class GameSession {
         if (!target) throw new Error(`Exit points at missing place "${action.to}"`)
 
         let next = spendEnergy(state, exit.energyCost ?? DEFAULT_WALK_COST)
+        next = advanceMinutes(next, 12)
         if (exit.advancesPeriod) next = advancePeriod(next)
         next = { ...next, place: target.id, district: target.district }
         return { state: next, events: [{ type: 'moved', place: target.id }] }
@@ -379,7 +387,7 @@ export class GameSession {
 
         let next = payFare(state)
         next = spendEnergy(next, 4)
-        next = advancePeriod(next)
+        next = advanceMinutes(next, 45)
         next = {
           ...next,
           district: target.id,
@@ -484,7 +492,7 @@ export class GameSession {
     if (next.mode.kind === 'world' && isExhausted(next)) {
       next = {
         ...next,
-        clock: { day: next.clock.day + 1, period: 'morning' },
+        clock: { day: next.clock.day + 1, period: 'morning', minuteOfDay: 420 },
         player: { ...next.player, energy: Math.round(next.player.energyMax * 0.6) },
         journal: next.journal,
       }

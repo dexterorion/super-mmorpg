@@ -7,3 +7,9 @@ test-results
 public/atlas.png
 public/atlas.json
 package-lock.json
+.agents/
+.beads/
+.claude/
+.runtime/
+mayor/
+AGENTS.md
