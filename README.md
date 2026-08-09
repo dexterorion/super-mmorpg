@@ -63,7 +63,8 @@ Phaser / Playwright / bot headless
 - `src/content/`: mundo e história como dados validados por Zod.
 - `src/engine/`: apresentação Phaser, sem regras de jogo.
 - `tools/art/`: personagens e elementos paulistanos gerados de forma determinística.
-- `public/assets/fisherg-city/`: tiles urbanos CC0 usados como base dos mapas.
+- `public/assets/kenney-rpg-urban/`: cidade e personagens CC0 na mesma grade visual.
+- `public/assets/fisherg-city/`: base urbana CC0 anterior, mantida como referência.
 - `tools/playtest/`: bot headless e playthrough visual.
 - `docs/screenshots/`: capturas reais produzidas pelo playthrough.
 
@@ -97,7 +98,7 @@ GAROA é um projeto autoral, atualmente sem licença para redistribuição.
 
 ## Créditos de arte
 
-Os mapas urbanos reutilizam e adaptam o pack **12×12 City Tiles — Top Down**, de
-FisherG, distribuído em CC0. A cópia da licença original acompanha os arquivos em
-`public/assets/fisherg-city/LICENSE.txt`. Chuva, paleta, sinalização, personagens e
+Cidade, veículos e personagens agora usam o **RPG Urban Pack**, de Kenney,
+distribuído em CC0. O pack FisherG anterior também permanece preservado como
+referência CC0. As licenças acompanham os arquivos; chuva, paleta, sinalização e
 elementos específicos de São Paulo são adaptações do projeto GAROA.

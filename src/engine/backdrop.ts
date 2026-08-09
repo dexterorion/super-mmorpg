@@ -3,7 +3,7 @@ import Phaser from 'phaser'
 export interface WorldActor {
   readonly id: string
   readonly label: string
-  readonly kind: 'npc' | 'action'
+  readonly kind: 'npc'
 }
 export interface WorldExit {
   readonly actionId: string
@@ -61,16 +61,13 @@ export class WorldScene extends Phaser.Scene {
   }
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
-    this.load.image('fisherg-city', 'assets/fisherg-city/sMockup.png')
-    this.load.spritesheet('garoa-people-v2', 'assets/garoa-characters-v2/characters-sheet.png', {
-      frameWidth: 128,
-      frameHeight: 170,
-      endFrame: 71,
-    })
-    this.load.spritesheet('garoa-npcs-v3', 'assets/garoa-characters-v3/characters-sheet.png', {
-      frameWidth: 128,
-      frameHeight: 170,
-      endFrame: 71,
+    this.load.image('kenney-city', 'assets/kenney-rpg-urban/city-background.png')
+    this.load.spritesheet('kenney-people', 'assets/kenney-rpg-urban/Tilemap/tilemap.png', {
+      frameWidth: 16,
+      frameHeight: 16,
+      margin: 0,
+      spacing: 1,
+      endFrame: 485,
     })
   }
   create(): void {
@@ -103,9 +100,9 @@ export class WorldScene extends Phaser.Scene {
     this.createExits(bridge.presentation.exits)
     this.createActors(bridge.presentation.actors)
     this.player = this.physics.add
-      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'garoa-people-v2', 0)
-      .setScale(0.24)
-    this.player.setSize(42, 34).setOffset(43, 126).setCollideWorldBounds(true).setDepth(10)
+      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'kenney-people', 24)
+      .setScale(1.5)
+    this.player.setSize(10, 6).setOffset(3, 10).setCollideWorldBounds(true).setDepth(10)
     this.physics.add.collider(this.player, this.obstacles)
     this.physics.add.collider(this.player, this.actors)
     this.physics.add.overlap(this.player, this.exits, (_player, zone) => this.enterExit(zone))
@@ -158,13 +155,10 @@ export class WorldScene extends Phaser.Scene {
     actors.forEach((actor, index) => {
       const x = (index % 2 === 0 ? 18 : 6) * TILE
       const y = 12.1 * TILE
-      const sprite =
-        actor.kind === 'npc'
-          ? this.physics.add
-              .staticSprite(x, y, 'garoa-npcs-v3', npcFrame(actor.id))
-              .setScale(0.3)
-              .setDepth(8)
-          : this.physics.add.staticSprite(x, y, 'garoa', 'banca_jornal').setScale(1.5).setDepth(8)
+      const sprite = this.physics.add
+        .staticSprite(x, y, 'kenney-people', npcFrame(actor.id))
+        .setScale(1.5)
+        .setDepth(8)
       sprite.setData('actionId', actor.id)
       sprite.setData('label', actor.label)
       sprite.refreshBody()
@@ -325,7 +319,7 @@ function districtPalette(district: string): Palette {
 }
 function drawMap(scene: Phaser.Scene, palette: Palette, placeId: string, district: string): void {
   scene.add
-    .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'fisherg-city')
+    .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'kenney-city')
     .setDisplaySize(MAP_WIDTH * TILE, MAP_HEIGHT * TILE)
     .setDepth(0)
   scene.add
@@ -390,20 +384,20 @@ function drawLandmark(scene: Phaser.Scene, district: string): void {
   if (district === 'minhocao') scene.add.rectangle(384, 116, 768, 34, 0x485270, 0.88).setDepth(3)
 }
 function directionFrame(direction: 'down' | 'left' | 'right' | 'up', step: number): number {
-  return { down: 0, left: 3, right: 6, up: 9 }[direction] + step
+  return 23 + { left: 0, down: 1, up: 2, right: 3 }[direction] + step * 27
 }
 function npcFrame(actionId: string): number {
   const id = actionId.replace('talk:', '')
   const rows: Record<string, number> = {
-    ajudante: 0,
-    seu_jorge: 0,
-    dona_cida: 5,
-    yumi: 4,
-    tico: 3,
-    renan: 1,
+    ajudante: 4,
+    seu_jorge: 1,
+    dona_cida: 2,
+    yumi: 3,
+    tico: 4,
+    renan: 5,
     val: 2,
   }
-  return (rows[id] ?? 2) * 12
+  return 24 + (rows[id] ?? 5) * 81
 }
 
 export function mountBackdrop(parent: string): WorldController {

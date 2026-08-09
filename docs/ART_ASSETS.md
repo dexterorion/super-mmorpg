@@ -31,3 +31,17 @@ os NPCs genéricos por seis silhuetas urbanas mais legíveis: trabalhador da
 construção, profissional de escritório, artista, entregador de bicicleta,
 estudante e trabalhadora da saúde. Ela também foi gerada especificamente para o
 GAROA, removida de fundo cromático e normalizada para a grade 12×6 de 128×170 px.
+
+## Kenney — RPG Urban Pack
+
+- Origem: https://kenney.nl/assets/rpg-urban-pack
+- Autor: Kenney
+- Licença: Creative Commons Zero (CC0 1.0).
+- Arquivos usados: uma região sem material promocional de `Sample.png` e a folha
+  `Tilemap/tilemap.png`, preservados com a licença original em
+  `public/assets/kenney-rpg-urban/`.
+
+O pacote passa a fornecer uma única grade visual de 16×16 para cidade, player,
+NPCs, veículos e mobiliário. Pedestres decorativos e personagens interativos
+compartilham proporção, contorno e paleta; somente os interativos recebem rótulo,
+colisão e diálogo.

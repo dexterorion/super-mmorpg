@@ -164,11 +164,11 @@ function render(): void {
     placeName: content.places[state.place]?.name ?? state.place,
     district: state.district,
     actors: actions
-      .filter((item) => item.enabled && (item.group === 'people' || item.group === 'act'))
+      .filter((item) => item.enabled && item.group === 'people')
       .map((item) => ({
         id: item.id,
         label: item.label,
-        kind: item.group === 'people' ? ('npc' as const) : ('action' as const),
+        kind: 'npc' as const,
       })),
     exits: actions
       .filter((item) => item.enabled && item.group === 'move')
