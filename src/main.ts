@@ -103,6 +103,13 @@ function saveSlot(slot: Slot): void {
   telemetry.emit({ name: 'save', at: browserClock.now(), fields: { slot } })
   render()
 }
+function chooseTravelMode(mode: TravelMode): void {
+  if (!state) return
+  state = { ...state, player: { ...state.player, preferredTravelMode: mode } }
+  save(storage, AUTOSAVE_SLOT, state, browserClock.now())
+  audio.cue('choice:travel-mode')
+  render()
+}
 function title(): string {
   if (!state) return 'GAROA'
   if (state.mode.kind === 'dialogue')
@@ -194,7 +201,7 @@ function menu(): string {
     peak: state!.clock.period !== 'night',
     raining: true,
   })
-  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<span><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</span>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
+  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
 }
 function debug(): string {
   return `<aside class="debug"><b>DEBUG · F3</b><pre>${JSON.stringify({ mode: state!.mode, place: state!.place, seed: state!.seed, rng: state!.rngState }, null, 2)}</pre>${telemetry
@@ -245,6 +252,11 @@ function bind(): void {
   )
   ui.querySelectorAll<HTMLButtonElement>('[data-slot]').forEach((button) =>
     button.addEventListener('click', () => saveSlot(button.dataset.slot as Slot))
+  )
+  ui.querySelectorAll<HTMLButtonElement>('[data-travel-mode]').forEach((button) =>
+    button.addEventListener('click', () =>
+      chooseTravelMode(button.dataset.travelMode as TravelMode)
+    )
   )
   ui.querySelector<HTMLButtonElement>('.selected')?.focus({ preventScroll: true })
 }

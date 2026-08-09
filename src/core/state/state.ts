@@ -18,6 +18,7 @@ import type {
   QuestId,
 } from '../types.js'
 import type { DesenroloBattle } from '../desenrolo/battle.js'
+import type { TravelMode } from '../life/commute.js'
 
 /**
  * The whole game, as one plain serialisable object.
@@ -27,7 +28,7 @@ import type { DesenroloBattle } from '../desenrolo/battle.js'
  * — which is how we search for softlocks without replaying from the start.
  */
 
-export const SCHEMA_VERSION = 4
+export const SCHEMA_VERSION = 5
 
 export interface PlayerStats {
   /** Manha — the level. Rises by learning about the city, never by fighting. */
@@ -52,6 +53,7 @@ export interface PlayerState {
   readonly monthlyIncome: Centavos
   readonly housing: HousingId
   readonly monthlyRent: Centavos
+  readonly preferredTravelMode: TravelMode
   readonly stats: PlayerStats
   /** Grana, in centavos. */
   readonly money: Centavos
@@ -165,6 +167,7 @@ export function createInitialState(options: NewGameOptions): GameState {
       monthlyIncome: profile?.monthlyIncome ?? 190_000,
       housing: profile?.housing ?? 'pensao_bixiga',
       monthlyRent: profile?.monthlyRent ?? 95_000,
+      preferredTravelMode: 'metro',
       stats: profile?.stats ?? { savvy: 1, savvyXp: 0, gab: 1, instinct: 1, grit: 2 },
       money: profile?.startingMoney ?? STARTING_MONEY,
       energy: profile?.energy ?? STARTING_ENERGY,

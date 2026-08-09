@@ -51,13 +51,20 @@ button {
   display: grid;
   gap: 5px;
 }
-.commutes span {
+.commutes button {
   padding: 7px 9px;
   color: var(--mist);
+  text-align: left;
   background: #101923;
+  border: 0;
   border-left: 3px solid #718493;
+  cursor: pointer;
 }
-.commutes b {
+.commutes button.active {
+  border-left-color: var(--amber);
+  background: #304252;
+}
+.commutes button b {
   color: var(--amber);
 }
 #game-canvas {

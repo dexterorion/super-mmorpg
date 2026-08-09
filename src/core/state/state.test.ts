@@ -37,6 +37,7 @@ describe('state selectors and immutable helpers', () => {
       archetype: 'pedreiro',
       occupation: 'Construção civil',
       housing: 'quarto_guarulhos',
+      preferredTravelMode: 'metro',
       money: 42_000,
       energy: 70,
     })

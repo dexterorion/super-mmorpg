@@ -73,6 +73,10 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
     ...raw,
     clock: { ...(raw.clock as object), minuteOfDay: 310 },
   }),
+  4: (raw) => ({
+    ...raw,
+    player: { ...(raw.player as object), preferredTravelMode: 'metro' },
+  }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -220,6 +224,7 @@ function isGameState(value: unknown): value is GameState {
       'studio_copan',
     ]) &&
     typeof value.player.monthlyRent === 'number' &&
+    isOneOf(value.player.preferredTravelMode, ['walk', 'bike', 'bus', 'metro']) &&
     numbers(value.player.stats, ['savvy', 'savvyXp', 'gab', 'instinct', 'grit']) &&
     typeof value.player.money === 'number' &&
     Number.isSafeInteger(value.player.money) &&

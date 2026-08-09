@@ -52,6 +52,8 @@ test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName
   await action(page, 'walk:tiete_metro')
   await action(page, 'do:comprar_bilhete')
   await page.getByRole('button', { name: 'Caderninho' }).click()
+  await page.getByRole('button', { name: /Busão/ }).click()
+  await expect(page.getByRole('button', { name: /Busão/ })).toHaveClass(/active/)
   await page.locator('[data-slot="1"]').click()
   if (browserName === 'chromium') await shot(page, '04-caderninho')
   await page.getByRole('button', { name: 'Fechar' }).click()
@@ -59,6 +61,8 @@ test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName
   await page.reload()
   await page.getByRole('button', { name: 'Continuar' }).click()
   await expect(page.locator('.hud')).toHaveText(hudBefore ?? '')
+  await page.getByRole('button', { name: 'Caderninho' }).click()
+  await expect(page.getByRole('button', { name: /Busão/ })).toHaveClass(/active/)
   expect(errors).toEqual([])
 })
 
