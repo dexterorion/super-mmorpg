@@ -1,0 +1,222 @@
+:root {
+  color: #f0eadb;
+  background: #101923;
+  font-family: 'Courier New', ui-monospace, monospace;
+  font-synthesis: none;
+  --ink: #101923;
+  --concrete: #304252;
+  --mist: #a7b2b5;
+  --paper: #f0eadb;
+  --amber: #f3c969;
+  --green: #57a17f;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+button {
+  font: inherit;
+}
+#game-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+#game-canvas canvas {
+  image-rendering: pixelated;
+}
+#ui {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 24px clamp(18px, 5vw, 72px);
+  background: linear-gradient(180deg, rgba(11, 16, 32, 0.18), rgba(11, 16, 32, 0.58));
+}
+.hud {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 3px solid var(--paper);
+  box-shadow: 6px 6px 0 var(--ink);
+  background: rgba(16, 25, 35, 0.92);
+}
+.hud span {
+  padding: 10px 16px;
+  color: var(--mist);
+  font-size: 12px;
+  border-right: 1px solid #536675;
+}
+.hud span:last-child {
+  border: 0;
+}
+.hud b {
+  display: block;
+  color: var(--paper);
+  font-size: 16px;
+  margin-top: 3px;
+}
+.scene {
+  align-self: end;
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto 18px;
+}
+.route {
+  color: var(--amber);
+  letter-spacing: 0.16em;
+  font-weight: bold;
+  font-size: 13px;
+}
+.scene h2 {
+  font-size: clamp(28px, 5vw, 58px);
+  margin: 4px 0 12px;
+  text-shadow: 4px 4px 0 var(--ink);
+}
+.dialogue {
+  min-height: 110px;
+  border: 4px solid var(--paper);
+  background: rgba(16, 25, 35, 0.96);
+  padding: 22px 26px;
+  box-shadow: 8px 8px 0 var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dialogue strong {
+  font-size: clamp(17px, 2.4vw, 25px);
+  line-height: 1.45;
+}
+.dialogue span {
+  color: var(--mist);
+  font-size: 12px;
+}
+.actions {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+.actions button,
+.slots button,
+.menu > button,
+.menu-button {
+  text-align: left;
+  color: var(--paper);
+  background: rgba(30, 42, 54, 0.96);
+  border: 2px solid #718493;
+  padding: 11px 15px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.actions button:hover,
+.actions button:focus,
+.actions button.selected,
+.slots button:focus,
+.menu > button:focus {
+  outline: none;
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+button small {
+  color: var(--mist);
+}
+.menu-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+}
+.menu,
+.debug {
+  position: fixed;
+  z-index: 3;
+  inset: 10% max(24px, 15%);
+  padding: 28px;
+  border: 4px solid var(--paper);
+  background: #18202bf2;
+  box-shadow: 12px 12px 0 #0b1020;
+  overflow: auto;
+}
+.menu h3 {
+  color: var(--amber);
+  font-size: 24px;
+}
+.menu p {
+  border-left: 4px solid var(--green);
+  padding-left: 14px;
+  line-height: 1.5;
+}
+.slots {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 28px;
+}
+.debug {
+  inset: auto 18px 18px auto;
+  width: 360px;
+  font-size: 12px;
+  border-color: var(--green);
+}
+.title-card {
+  align-self: center;
+  justify-self: center;
+  width: min(640px, 94vw);
+  border: 5px solid var(--paper);
+  background: rgba(16, 25, 35, 0.94);
+  padding: clamp(28px, 7vw, 70px);
+  box-shadow: 14px 14px 0 var(--ink);
+}
+.title-card h1 {
+  color: var(--amber);
+  font-size: clamp(64px, 15vw, 132px);
+  line-height: 0.8;
+  letter-spacing: -0.08em;
+  margin: 24px 0;
+}
+.tagline {
+  font-size: 20px;
+}
+.keys {
+  color: var(--mist);
+  font-size: 12px;
+  margin-top: 28px;
+}
+@media (max-width: 700px) {
+  #ui {
+    padding: 12px;
+  }
+  .hud {
+    grid-template-columns: 1fr 1fr;
+  }
+  .hud span:nth-child(2) {
+    border-right: 0;
+  }
+  .scene {
+    margin-bottom: 56px;
+  }
+  .dialogue {
+    padding: 16px;
+  }
+  .menu {
+    inset: 4% 12px;
+  }
+  .menu-button {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
