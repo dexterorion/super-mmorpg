@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "phaser": "^3.90.0",
-    "zod": "^3.24.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.18.0",
