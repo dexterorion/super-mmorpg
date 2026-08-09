@@ -288,6 +288,14 @@ describe('GameSession actions', () => {
       ])
     )
 
+    const observed = session.performById(playing, 'battle:observe').state
+    expect(
+      session.availableActions(observed).find((action) => action.id === 'battle:observe')
+    ).toMatchObject({
+      enabled: false,
+      lockedReason: 'já entendeu tudo',
+    })
+
     const won = session.performById(playing, 'battle:argue:ask').state
     expect(session.availableActions(won)).toEqual([expect.objectContaining({ id: 'battle:ack' })])
     expect(session.performById(won, 'battle:ack').state.mode).toEqual({ kind: 'world' })

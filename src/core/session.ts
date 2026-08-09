@@ -176,7 +176,8 @@ export class GameSession {
       id: 'battle:observe',
       label: view.canObserve ? 'Observar' : 'Observar (já entendeu tudo)',
       action: { kind: 'battle', move: { kind: 'observe' } },
-      enabled: true,
+      enabled: view.canObserve,
+      ...(!view.canObserve ? { lockedReason: 'já entendeu tudo' } : {}),
       group: 'battle',
     })
 
