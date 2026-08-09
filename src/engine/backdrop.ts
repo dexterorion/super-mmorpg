@@ -62,6 +62,11 @@ export class WorldScene extends Phaser.Scene {
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
     this.load.image('fisherg-city', 'assets/fisherg-city/sMockup.png')
+    this.load.spritesheet('garoa-people-v2', 'assets/garoa-characters-v2/characters-sheet.png', {
+      frameWidth: 128,
+      frameHeight: 170,
+      endFrame: 71,
+    })
   }
   create(): void {
     bridge.scene = this
@@ -93,9 +98,9 @@ export class WorldScene extends Phaser.Scene {
     this.createExits(bridge.presentation.exits)
     this.createActors(bridge.presentation.actors)
     this.player = this.physics.add
-      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'garoa', 'protagonista_down_0')
-      .setScale(1.6)
-    this.player.setSize(12, 10).setOffset(10, 20).setCollideWorldBounds(true).setDepth(10)
+      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'garoa-people-v2', 0)
+      .setScale(0.24)
+    this.player.setSize(42, 34).setOffset(43, 126).setCollideWorldBounds(true).setDepth(10)
     this.physics.add.collider(this.player, this.obstacles)
     this.physics.add.collider(this.player, this.actors)
     this.physics.add.overlap(this.player, this.exits, (_player, zone) => this.enterExit(zone))
@@ -148,8 +153,13 @@ export class WorldScene extends Phaser.Scene {
     actors.forEach((actor, index) => {
       const x = (index % 2 === 0 ? 18 : 6) * TILE
       const y = 12.1 * TILE
-      const frame = actor.kind === 'npc' ? npcFrame(actor.id) : 'banca_jornal'
-      const sprite = this.physics.add.staticSprite(x, y, 'garoa', frame).setScale(1.5).setDepth(8)
+      const sprite =
+        actor.kind === 'npc'
+          ? this.physics.add
+              .staticSprite(x, y, 'garoa-people-v2', npcFrame(actor.id))
+              .setScale(0.24)
+              .setDepth(8)
+          : this.physics.add.staticSprite(x, y, 'garoa', 'banca_jornal').setScale(1.5).setDepth(8)
       sprite.setData('actionId', actor.id)
       sprite.setData('label', actor.label)
       sprite.refreshBody()
@@ -209,7 +219,7 @@ export class WorldScene extends Phaser.Scene {
           ? 'up'
           : 'down'
     if (velocity.lengthSq() > 0)
-      this.player.setFrame(`protagonista_${direction}_${Math.floor(time / 180) % 2}`)
+      this.player.setFrame(directionFrame(direction, Math.floor(time / 160) % 3))
     this.nearby = this.closestActor()
     bridge.promptCallback(this.nearby?.label)
     if (Phaser.Input.Keyboard.JustDown(this.wasd.interact) && this.nearby)
@@ -374,18 +384,21 @@ function drawLandmark(scene: Phaser.Scene, district: string): void {
   if (district === 'zona_leste') scene.add.rectangle(384, 420, 768, 120, 0x3e6970, 0.42).setDepth(2)
   if (district === 'minhocao') scene.add.rectangle(384, 116, 768, 34, 0x485270, 0.88).setDepth(3)
 }
-function npcFrame(actionId: string): string {
+function directionFrame(direction: 'down' | 'left' | 'right' | 'up', step: number): number {
+  return { down: 0, left: 3, right: 6, up: 9 }[direction] + step
+}
+function npcFrame(actionId: string): number {
   const id = actionId.replace('talk:', '')
-  const known: Record<string, string> = {
-    ajudante: 'ajudante_down_0',
-    seu_jorge: 'seu_jorge_down_0',
-    dona_cida: 'dona_cida_down_0',
-    yumi: 'yumi_down_0',
-    tico: 'tico_down_0',
-    renan: 'ajudante_down_0',
-    val: 'protagonista_down_0',
+  const rows: Record<string, number> = {
+    ajudante: 4,
+    seu_jorge: 1,
+    dona_cida: 2,
+    yumi: 3,
+    tico: 4,
+    renan: 5,
+    val: 0,
   }
-  return known[id] ?? 'tico_down_0'
+  return (rows[id] ?? 4) * 12
 }
 
 export function mountBackdrop(parent: string): WorldController {
