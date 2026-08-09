@@ -1,14 +1,29 @@
 # GAROA
 
+[![CI](https://github.com/dexterorion/super-mmorpg/actions/workflows/ci.yml/badge.svg)](https://github.com/dexterorion/super-mmorpg/actions/workflows/ci.yml)
+[![E2E](https://github.com/dexterorion/super-mmorpg/actions/workflows/e2e.yml/badge.svg)](https://github.com/dexterorion/super-mmorpg/actions/workflows/e2e.yml)
+[![Security](https://github.com/dexterorion/super-mmorpg/actions/workflows/security.yml/badge.svg)](https://github.com/dexterorion/super-mmorpg/actions/workflows/security.yml)
+
 Um RPG 2D sobre chegar a São Paulo às 5h da manhã com R$ 340, o endereço de um primo desaparecido e nenhuma certeza de como a cidade funciona.
 
 ![Exploração top-down em GAROA](docs/screenshots/exploration.png)
 
 ## Estado do jogo
 
-A campanha completa, em cinco atos, é jogável do começo ao fim no navegador. Ela atravessa Tietê, Centro, Bixiga, Liberdade, Paulista, Zona Leste e Minhocão, com diálogos ramificados, transporte público, saves, Caderninho e seis **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa. Música procedural, garoa, tráfego e efeitos reagem ao bairro, período e modo de jogo.
+A campanha narrativa atual, em cinco atos, é jogável do começo ao fim no navegador. Ela atravessa Tietê, Centro, Bixiga, Liberdade, Paulista, Zona Leste e Minhocão, com movimento top-down, colisões, NPCs, diálogos ramificados, transporte público, saves, Caderninho e seis **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa. Música procedural, garoa, tráfego e efeitos reagem ao bairro, período e modo de jogo.
 
 Uma escolha na Horizonte Urbano e o destino de Val formam quatro finais distintos.
+
+O arco de campanha não é o limite planejado do projeto. O “jogo da vida” aberto — estudar, mudar de moradia, construir família e atravessar conjunturas econômicas durante anos — continua em evolução.
+
+| Sistema                                            | Estado atual                                                           |
+| -------------------------------------------------- | ---------------------------------------------------------------------- |
+| Campanha de cinco atos e quatro finais             | Jogável e coberta por playtest automatizado                            |
+| Exploração, colisões, NPCs e oito mapas distritais | Jogável                                                                |
+| Arquétipos, aluguel, renda e deslocamento          | Jogável                                                                |
+| Matrícula e progressão educacional desigual        | Integrada ao estado, sessão, Caderninho e saves                        |
+| Parceria, casamento, filhos e trabalho de cuidado  | Motor de regras e persistência prontos; conteúdo narrativo em expansão |
+| Conjuntura econômica e social de longo prazo       | Em integração ao loop jogável                                          |
 
 O conteúdo está em pt-BR. Código, identificadores e documentação técnica usam inglês.
 
@@ -47,6 +62,16 @@ atual. As imagens abaixo são renderizações reais do jogo em 1280×720, não m
 | ------------------------------------------ | ------------------------------------- |
 | ![Enchente](docs/screenshots/enchente.png) | ![Final](docs/screenshots/ending.png) |
 
+| Repartição                                     | Entrevista                                     |
+| ---------------------------------------------- | ---------------------------------------------- |
+| ![Repartição](docs/screenshots/reparticao.png) | ![Entrevista](docs/screenshots/entrevista.png) |
+
+| Minhocão                                   |
+| ------------------------------------------ |
+| ![Minhocão](docs/screenshots/minhocao.png) |
+
+Para regenerar as capturas, execute `npm run playtest:visual`, inspecione os 11 PNGs em `playtest-report/screenshots/` e copie as versões aprovadas para `docs/screenshots/`. Capturas visuais não devem ser publicadas sem inspeção humana ou visual do resultado.
+
 ## Arquitetura
 
 O jogo tem uma única API de regras: `GameSession`. Phaser e o bot headless consultam `availableActions(state)` e executam `perform(state, action)`. Assim, um caminho que o bot testa é o mesmo caminho usado pelo jogador.
@@ -62,7 +87,7 @@ Phaser / Playwright / bot headless
 - `src/core/`: estado imutável, economia, diálogos, Desenrolo, RNG e saves.
 - `src/content/`: mundo e história como dados validados por Zod.
 - `src/engine/`: apresentação Phaser, sem regras de jogo.
-- `tools/art/`: personagens e elementos paulistanos gerados de forma determinística.
+- `tools/art/`: atlas determinístico de elementos paulistanos complementares.
 - `public/assets/kenney-rpg-urban/`: cidade e personagens CC0 na mesma grade visual.
 - `public/assets/fisherg-city/`: base urbana CC0 anterior, mantida como referência.
 - `tools/playtest/`: bot headless e playthrough visual.
@@ -81,7 +106,7 @@ npm run playtest:visual
 npm run build
 ```
 
-`npm run verify` executa as verificações rápidas sem o Playwright. Os workflows CI, E2E e Security repetem a validação em GitHub Actions.
+`npm run verify` executa as verificações rápidas sem o Playwright. Os workflows [CI](https://github.com/dexterorion/super-mmorpg/actions/workflows/ci.yml), [E2E](https://github.com/dexterorion/super-mmorpg/actions/workflows/e2e.yml) e [Security](https://github.com/dexterorion/super-mmorpg/actions/workflows/security.yml) repetem a validação no GitHub Actions.
 
 O histórico de rodadas e correções está em [PLAYTEST_LOG.md](PLAYTEST_LOG.md). Para contribuir, consulte [CONTRIBUTING.md](CONTRIBUTING.md).
 O desenvolvimento em andamento pode ser acompanhado nas [GitHub Issues](https://github.com/dexterorion/super-mmorpg/issues).
