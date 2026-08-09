@@ -77,6 +77,30 @@ describe('serialize / deserialize', () => {
     expect(result.migrated).toBe(false)
   })
 
+  it('persists partnership, children decisions and care history', () => {
+    const familyState = {
+      ...state,
+      flags: { 'family:care:42': true },
+      family: {
+        partnership: {
+          partnerNpcId: 'yumi',
+          status: 'married' as const,
+          startedOnDay: 3,
+          marriedOnDay: 35,
+          partnerCareShare: 0.5,
+        },
+        childrenDecision: 'yes' as const,
+        children: [{ id: 'child-40', name: 'Luz', age: 'baby' as const, joinedOnDay: 40 }],
+      },
+    }
+
+    const result = deserialize(serialize(familyState, 1000))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.family).toEqual(familyState.family)
+    expect(result.state.flags['family:care:42']).toBe(true)
+  })
+
   it('migrates a v2 archetype save to the housing model', () => {
     const oldState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
     const oldPlayer = oldState.player as Record<string, unknown>

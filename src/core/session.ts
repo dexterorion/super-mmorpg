@@ -28,6 +28,14 @@ import { isFlagTrue, withFlag, type GameState } from './state/state.js'
 import { estimateCommute, type TravelMode } from './life/commute.js'
 import { advanceEducation } from './life/education.js'
 import { applyDueConjuncture } from './life/conjuncture.js'
+import {
+  assessFamilyImpact,
+  beginPartnership,
+  decideChildren,
+  marryPartner,
+  welcomeChild,
+  type ChildrenDecision,
+} from './life/family.js'
 
 /**
  * The one surface everything drives the game through.
@@ -56,6 +64,15 @@ export type Action =
   | { readonly kind: 'placeAction'; readonly actionId: string }
   | { readonly kind: 'battle'; readonly move: DesenroloAction }
   | { readonly kind: 'useItem'; readonly itemId: ItemId }
+  | {
+      readonly kind: 'family'
+      readonly decision:
+        | { readonly kind: 'beginPartnership'; readonly partnerNpcId: NpcId }
+        | { readonly kind: 'marry' }
+        | { readonly kind: 'decideChildren'; readonly value: ChildrenDecision }
+        | { readonly kind: 'welcomeChild' }
+        | { readonly kind: 'careDay' }
+    }
 
 export interface AvailableAction {
   /** Stable across runs — the bot's vocabulary and the UI's key. */
@@ -65,7 +82,7 @@ export interface AvailableAction {
   readonly enabled: boolean
   readonly lockedReason?: string
   /** Grouping hint for the UI. */
-  readonly group: 'dialogue' | 'move' | 'people' | 'act' | 'battle' | 'item'
+  readonly group: 'dialogue' | 'move' | 'people' | 'act' | 'battle' | 'item' | 'life'
 }
 
 export interface PerformResult {
@@ -83,6 +100,7 @@ const SECONDS_PER_ACTION: Record<Action['kind'], number> = {
   placeAction: 6,
   battle: 7,
   useItem: 4,
+  family: 9,
 }
 
 const TRAVEL_MODE_LABEL: Readonly<Record<TravelMode, string>> = {
@@ -232,6 +250,124 @@ export class GameSession {
     return actions
   }
 
+  private familyActions(state: GameState): readonly AvailableAction[] {
+    const partnership = state.family.partnership
+    if (!partnership) {
+      return Object.entries(state.relationships)
+        .filter(([npcId, affinity]) => affinity >= 2 && this.content.npcs[npcId])
+        .map(([npcId]) => ({
+          id: `family:partner:${npcId}`,
+          label: `Construir uma parceria com ${this.content.npcs[npcId]!.name} · 2h`,
+          action: {
+            kind: 'family' as const,
+            decision: { kind: 'beginPartnership' as const, partnerNpcId: npcId },
+          },
+          enabled: state.player.energy >= 4,
+          ...(state.player.energy >= 4 ? {} : { lockedReason: 'sem disposição' }),
+          group: 'life' as const,
+        }))
+    }
+
+    const actions: AvailableAction[] = []
+    if (partnership.status === 'partnered') {
+      const daysTogether = state.clock.day - partnership.startedOnDay
+      const ready = daysTogether >= 30
+      const affordable = state.player.money >= 60_000
+      const rested = state.player.energy >= 8
+      actions.push({
+        id: 'family:marry',
+        label: 'Casar no civil · R$ 600,00 · 6h',
+        action: { kind: 'family', decision: { kind: 'marry' } },
+        enabled: ready && affordable && rested,
+        ...(!ready
+          ? { lockedReason: `a parceria tem ${daysTogether}/30 dias` }
+          : !affordable
+            ? { lockedReason: 'grana insuficiente' }
+            : !rested
+              ? { lockedReason: 'sem disposição' }
+              : {}),
+        group: 'life',
+      })
+    }
+
+    if (state.family.childrenDecision === 'undecided') {
+      for (const value of ['yes', 'no'] as const) {
+        actions.push({
+          id: `family:children:${value}`,
+          label:
+            value === 'yes'
+              ? 'Conversar: queremos ter filhos · 1h'
+              : 'Conversar: não queremos ter filhos · 1h',
+          action: { kind: 'family', decision: { kind: 'decideChildren', value } },
+          enabled: true,
+          group: 'life',
+        })
+      }
+    }
+
+    if (state.family.childrenDecision === 'yes' && state.family.children.length === 0) {
+      const affordable = state.player.money >= 25_000
+      const rested = state.player.energy >= 8
+      actions.push({
+        id: 'family:welcome-child',
+        label: 'Acolher uma criança · R$ 250,00 · 4h',
+        action: { kind: 'family', decision: { kind: 'welcomeChild' } },
+        enabled: affordable && rested,
+        ...(!affordable
+          ? { lockedReason: 'grana insuficiente para os primeiros cuidados' }
+          : !rested
+            ? { lockedReason: 'sem disposição' }
+            : {}),
+        group: 'life',
+      })
+    }
+
+    if (state.family.children.length > 0 && !isFlagTrue(state, `family:care:${state.clock.day}`)) {
+      const impact = this.familyImpact(state)
+      const dailyCost = Math.ceil(impact.monthlyCareCost / 30)
+      const careMinutes = Math.ceil((impact.weeklyCareHours * 60) / 7)
+      actions.push({
+        id: 'family:care-day',
+        label: `Assumir o cuidado de hoje · ${formatMoney(dailyCost)} · ${formatDuration(careMinutes)}`,
+        action: { kind: 'family', decision: { kind: 'careDay' } },
+        enabled: state.player.money >= dailyCost && state.player.energy >= 6,
+        ...(state.player.money < dailyCost
+          ? { lockedReason: 'grana insuficiente' }
+          : state.player.energy < 6
+            ? { lockedReason: 'sem disposição' }
+            : {}),
+        group: 'life',
+      })
+    }
+    return actions
+  }
+
+  familyImpact(state: GameState) {
+    const comfortByHousing: Record<string, number> = {
+      pensao_bixiga: 2,
+      kitnet_centro: 3,
+      apartamento_zona_leste: 4,
+      quarto_guarulhos: 2,
+      studio_copan: 4,
+    }
+    const workHoursByArchetype: Record<string, number> = {
+      pedreiro: 48,
+      faria_limer: 52,
+      artista: 38,
+      entregador: 50,
+      estudante: 24,
+      saude: 48,
+    }
+    return assessFamilyImpact({
+      family: state.family,
+      housing: state.player.housing,
+      housingComfort: comfortByHousing[state.player.housing] ?? 2,
+      monthlyHouseholdIncome: state.player.monthlyIncome,
+      weeklyWorkHours: workHoursByArchetype[state.player.archetype] ?? 40,
+      commuteMinutesPerDay: commuteFor(state).minutes * 2,
+    })
+  }
+
   private worldActions(state: GameState): readonly AvailableAction[] {
     const place = this.content.places[state.place]
     if (!place) return []
@@ -333,6 +469,8 @@ export class GameSession {
         group: 'item',
       })
     }
+
+    actions.push(...this.familyActions(state))
 
     return actions
   }
@@ -455,6 +593,73 @@ export class GameSession {
             : applied.state
         return { state: consumed, events: applied.events }
       }
+
+      case 'family':
+        return this.performFamily(state, action.decision)
+    }
+  }
+
+  private performFamily(
+    state: GameState,
+    decision: Extract<Action, { kind: 'family' }>['decision']
+  ): PerformResult {
+    const available = this.familyActions(state).find((candidate) => {
+      const candidateDecision = (candidate.action as Extract<Action, { kind: 'family' }>).decision
+      return (
+        candidate.enabled &&
+        candidateDecision.kind === decision.kind &&
+        (decision.kind !== 'beginPartnership' ||
+          (candidateDecision.kind === 'beginPartnership' &&
+            candidateDecision.partnerNpcId === decision.partnerNpcId)) &&
+        (decision.kind !== 'decideChildren' ||
+          (candidateDecision.kind === 'decideChildren' &&
+            candidateDecision.value === decision.value))
+      )
+    })
+    if (!available) return { state, events: [] }
+
+    switch (decision.kind) {
+      case 'beginPartnership': {
+        const next = advanceMinutes(
+          spendEnergy(beginPartnership(state, decision.partnerNpcId), 4),
+          120
+        )
+        return {
+          state: next,
+          events: [{ type: 'familyPartnership', partnerNpcId: decision.partnerNpcId }],
+        }
+      }
+      case 'marry': {
+        const married = marryPartner(state)
+        const next = advanceMinutes(spendEnergy(withMoney(married, -60_000), 8), 360)
+        return { state: next, events: [{ type: 'familyMarriage' }] }
+      }
+      case 'decideChildren':
+        return {
+          state: advanceMinutes(decideChildren(state, decision.value), 60),
+          events: [{ type: 'familyChildrenDecision', decision: decision.value }],
+        }
+      case 'welcomeChild': {
+        const parent = welcomeChild(state, { id: `child-${state.clock.day}`, name: 'Luz' })
+        const next = advanceMinutes(spendEnergy(withMoney(parent, -25_000), 8), 240)
+        return {
+          state: next,
+          events: [{ type: 'familyChildWelcomed', childId: `child-${state.clock.day}` }],
+        }
+      }
+      case 'careDay': {
+        const impact = this.familyImpact(state)
+        const dailyCost = Math.ceil(impact.monthlyCareCost / 30)
+        const careMinutes = Math.ceil((impact.weeklyCareHours * 60) / 7)
+        let next = withFlag(state, `family:care:${state.clock.day}`, true)
+        next = withMoney(next, -dailyCost)
+        next = spendEnergy(next, 6)
+        next = advanceMinutes(next, careMinutes)
+        return {
+          state: next,
+          events: [{ type: 'familyCare', cost: dailyCost, minutes: careMinutes }],
+        }
+      }
     }
   }
 
@@ -536,6 +741,20 @@ function consume(inventory: Readonly<Record<ItemId, number>>, id: ItemId): Recor
   if (count <= 0) delete next[id]
   else next[id] = count
   return next
+}
+
+function withMoney(state: GameState, delta: number): GameState {
+  return { ...state, player: { ...state.player, money: state.player.money + delta } }
+}
+
+function formatMoney(value: number): string {
+  return `R$ ${(value / 100).toFixed(2).replace('.', ',')}`
+}
+
+function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest === 0 ? `${hours}h` : `${hours}h${String(rest).padStart(2, '0')}`
 }
 
 function affinityLabel(affinity: 'gab' | 'instinct' | 'grit'): string {

@@ -330,6 +330,72 @@ describe('GameSession actions', () => {
     expect(session.performById(talking, 'advance').state.mode).toEqual({ kind: 'world' })
   })
 
+  it('turns trusted NPC relationships into persistent family choices and daily care', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    const trusted = {
+      ...base,
+      place: 'a',
+      relationships: { bia: 2 },
+      player: { ...base.player, money: 200_000 },
+    }
+
+    expect(session.availableActions(trusted)).toContainEqual(
+      expect.objectContaining({ id: 'family:partner:bia', enabled: true })
+    )
+    const partnered = session.performById(trusted, 'family:partner:bia').state
+    expect(partnered.family.partnership).toMatchObject({
+      partnerNpcId: 'bia',
+      status: 'partnered',
+    })
+    expect(partnered.player.energy).toBe(base.player.energy - 4)
+
+    const maturePartnership = {
+      ...partnered,
+      clock: { ...partnered.clock, day: partnered.family.partnership!.startedOnDay + 30 },
+    }
+    const married = session.performById(maturePartnership, 'family:marry').state
+    expect(married.family.partnership).toMatchObject({ status: 'married' })
+    expect(married.player.money).toBeLessThanOrEqual(140_000)
+
+    const decided = session.performById(married, 'family:children:yes').state
+    expect(decided.family.childrenDecision).toBe('yes')
+    const parent = session.performById(decided, 'family:welcome-child').state
+    expect(parent.family.children).toEqual([expect.objectContaining({ name: 'Luz', age: 'baby' })])
+    expect(parent.player.money).toBe(married.player.money - 25_000)
+
+    const careAction = session
+      .availableActions(parent)
+      .find((action) => action.id === 'family:care-day')
+    expect(careAction).toMatchObject({ enabled: true, group: 'life' })
+    const cared = session.performById(parent, 'family:care-day')
+    expect(cared.events).toContainEqual(
+      expect.objectContaining({ type: 'familyCare', cost: expect.any(Number) })
+    )
+    expect(cared.state.player.money).toBeLessThan(parent.player.money)
+    expect(cared.state.clock.minuteOfDay).toBeGreaterThan(parent.clock.minuteOfDay)
+    expect(
+      session.availableActions(cared.state).some((action) => action.id === 'family:care-day')
+    ).toBe(false)
+  })
+
+  it('keeps family decisions locked until their social and material conditions are met', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    expect(
+      session.availableActions({ ...base, place: 'a', relationships: { bia: 1 } })
+    ).not.toContainEqual(expect.objectContaining({ id: 'family:partner:bia' }))
+
+    const partnered = session.performById(
+      { ...base, place: 'a', relationships: { bia: 2 } },
+      'family:partner:bia'
+    ).state
+    expect(session.availableActions(partnered)).toContainEqual(
+      expect.objectContaining({ id: 'family:marry', enabled: false })
+    )
+    expect(session.performById(partnered, 'family:marry').state).toBe(partnered)
+  })
+
   it('reconciles an effect-started battle and exposes its phases', () => {
     const session = new GameSession(playableContent())
     const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })

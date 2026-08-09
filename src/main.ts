@@ -159,7 +159,7 @@ function render(): void {
     bind()
     return
   }
-  const actions = session.availableActions(state)
+  const actions = session.availableActions(state).filter((item) => item.group !== 'life')
   const dialogue = dialogueView(state, session.dialogueLookup)
   const battle = battleView(state, session.desenroloLookup)
   const conjuncture = activeConjuncture(state)
@@ -240,7 +240,24 @@ function menu(): string {
   const educationStatus = enrollment
     ? `<p><b>${educationPaths[enrollment.pathId].name}</b><br>${enrollment.status === 'completed' ? 'Concluído' : `${enrollment.completedMonths}/${educationPaths[enrollment.pathId].durationMonths} meses concluídos`}</p>`
     : '<p>Nenhuma matrícula ativa.</p>'
-  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3>${educationStatus}<div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês · ${option.path.durationMonths} meses</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}<br>${option.path.completionDescription}</small>${enrollment?.status === 'active' ? '' : `<button data-education="${option.path.id}">Matricular</button>`}</article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
+  const family = state!.family
+  const partner = family.partnership
+    ? (content.npcs[family.partnership.partnerNpcId]?.name ?? family.partnership.partnerNpcId)
+    : undefined
+  const impact = session.familyImpact(state!)
+  const familyActions = session.availableActions(state!).filter((item) => item.group === 'life')
+  const relationshipStatus = partner
+    ? `${family.partnership!.status === 'married' ? 'Casamento' : 'Parceria'} com ${partner}`
+    : 'Sem parceria; vínculos de confiança podem virar uma vida a dois.'
+  const childrenStatus =
+    family.children.length > 0
+      ? family.children.map((child) => `${child.name} · ${child.age}`).join(', ')
+      : family.childrenDecision === 'yes'
+        ? 'Decisão: queremos filhos.'
+        : family.childrenDecision === 'no'
+          ? 'Decisão: não queremos filhos.'
+          : 'A decisão sobre filhos está em aberto.'
+  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Família e cuidado</h3><p><b>${relationshipStatus}</b><br>${childrenStatus}</p>${family.children.length > 0 ? `<p>Cuidado: ${money(impact.monthlyCareCost)}/mês · ${impact.weeklyCareHours}h/semana · pressão de moradia ${impact.housingPressure} · pressão de tempo ${impact.timePressure}</p>` : ''}<div class="education family-actions">${familyActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('') || '<p>Fortaleça vínculos com as pessoas da cidade para abrir novas decisões.</p>'}</div><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3>${educationStatus}<div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês · ${option.path.durationMonths} meses</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}<br>${option.path.completionDescription}</small>${enrollment?.status === 'active' ? '' : `<button data-education="${option.path.id}">Matricular</button>`}</article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
 }
 function debug(): string {
   return `<aside class="debug"><b>DEBUG · F3</b><pre>${JSON.stringify({ mode: state!.mode, place: state!.place, seed: state!.seed, rng: state!.rngState }, null, 2)}</pre>${telemetry
