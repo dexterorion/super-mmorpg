@@ -110,6 +110,14 @@ describe('serialize / deserialize', () => {
     if (result.ok) expect(result.state.player.preferredTravelMode).toBe('metro')
   })
 
+  it('migrates a v5 save to persisted education progress', () => {
+    const oldState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    delete oldState.education
+    const result = deserialize(JSON.stringify({ version: 5, savedAt: 1, state: oldState }))
+    expect(result).toMatchObject({ ok: true, migrated: true })
+    if (result.ok) expect(result.state.education).toBeNull()
+  })
+
   it('reports unparseable text as corrupt instead of throwing', () => {
     const result = deserialize('{{{not json')
     expect(result).toMatchObject({ ok: false, reason: 'corrupt' })

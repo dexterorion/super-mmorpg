@@ -77,6 +77,7 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
     ...raw,
     player: { ...(raw.player as object), preferredTravelMode: 'metro' },
   }),
+  5: (raw) => ({ ...raw, education: null }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -252,9 +253,25 @@ function isGameState(value: unknown): value is GameState {
       (entry) => typeof entry === 'number' && Number.isSafeInteger(entry)
     ) &&
     recordValues(value.relationships, (entry) => typeof entry === 'number') &&
+    (value.education === null || isEducationEnrollment(value.education)) &&
     strings(value.seenNodes) &&
     strings(value.clearedDesenrolos) &&
     typeof value.elapsedMinutes === 'number'
+  )
+}
+
+function isEducationEnrollment(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    isOneOf(value.pathId, [
+      'eja',
+      'technical',
+      'public_college',
+      'private_college',
+      'free_course',
+    ]) &&
+    isOneOf(value.status, ['active', 'completed']) &&
+    numbers(value, ['enrolledOnDay', 'lastProgressDay', 'completedMonths'])
   )
 }
 

@@ -1,4 +1,6 @@
 import type { ArchetypeId, Centavos } from '../types.js'
+import { addMoney, awardSavvy, trainAffinity } from '../economy/economy.js'
+import type { GameState } from '../state/state.js'
 
 export type EducationPathId =
   'eja' | 'technical' | 'public_college' | 'private_college' | 'free_course'
@@ -10,6 +12,15 @@ export interface EducationPath {
   readonly weeklyStudyHours: number
   readonly monthlyCost: Centavos
   readonly durationMonths: number
+  readonly completionDescription: string
+}
+
+export interface EducationEnrollment {
+  readonly pathId: EducationPathId
+  readonly status: 'active' | 'completed'
+  readonly enrolledOnDay: number
+  readonly lastProgressDay: number
+  readonly completedMonths: number
 }
 
 export interface EducationContext {
@@ -41,6 +52,7 @@ export const educationPaths: Readonly<Record<EducationPathId, EducationPath>> = 
     weeklyStudyHours: 4,
     monthlyCost: 0,
     durationMonths: 24,
+    completionDescription: '+1 Lábia e +60 XP de Manha',
   },
   technical: {
     id: 'technical',
@@ -49,6 +61,7 @@ export const educationPaths: Readonly<Record<EducationPathId, EducationPath>> = 
     weeklyStudyHours: 6,
     monthlyCost: 18_000,
     durationMonths: 18,
+    completionDescription: '+1 Fôlego e +R$ 400/mês de renda',
   },
   public_college: {
     id: 'public_college',
@@ -57,6 +70,7 @@ export const educationPaths: Readonly<Record<EducationPathId, EducationPath>> = 
     weeklyStudyHours: 14,
     monthlyCost: 8_000,
     durationMonths: 48,
+    completionDescription: '+2 Faro, +120 XP de Manha e +R$ 1.000/mês de renda',
   },
   private_college: {
     id: 'private_college',
@@ -65,6 +79,7 @@ export const educationPaths: Readonly<Record<EducationPathId, EducationPath>> = 
     weeklyStudyHours: 10,
     monthlyCost: 72_000,
     durationMonths: 48,
+    completionDescription: '+2 Lábia, +80 XP de Manha e +R$ 1.200/mês de renda',
   },
   free_course: {
     id: 'free_course',
@@ -73,6 +88,7 @@ export const educationPaths: Readonly<Record<EducationPathId, EducationPath>> = 
     weeklyStudyHours: 3,
     monthlyCost: 9_000,
     durationMonths: 3,
+    completionDescription: '+1 Faro e +35 XP de Manha',
   },
 }
 
@@ -120,4 +136,68 @@ export function allEducationAssessments(context: EducationContext): readonly Edu
   return (Object.keys(educationPaths) as EducationPathId[]).map((id) =>
     assessEducation(id, context)
   )
+}
+
+/** Enrollment is a player choice, never an archetype gate. Costs are charged as months pass. */
+export function enrollInEducation(state: GameState, pathId: EducationPathId): GameState {
+  if (state.education?.status === 'active') return state
+  return {
+    ...state,
+    education: {
+      pathId,
+      status: 'active',
+      enrolledOnDay: state.clock.day,
+      lastProgressDay: state.clock.day,
+      completedMonths: 0,
+    },
+  }
+}
+
+/** Applies every full 30-day study cycle crossed since the previous reconciliation. */
+export function advanceEducation(state: GameState): GameState {
+  const enrollment = state.education
+  if (enrollment?.status !== 'active') return state
+
+  const elapsedDays = state.clock.day - enrollment.lastProgressDay
+  const elapsedMonths = Math.floor(elapsedDays / 30)
+  if (elapsedMonths < 1) return state
+
+  const path = educationPaths[enrollment.pathId]
+  const monthsToComplete = path.durationMonths - enrollment.completedMonths
+  const progressedMonths = Math.min(elapsedMonths, monthsToComplete)
+  let next = addMoney(state, -path.monthlyCost * progressedMonths)
+  const completedMonths = enrollment.completedMonths + progressedMonths
+  const completed = completedMonths >= path.durationMonths
+  next = {
+    ...next,
+    education: {
+      ...enrollment,
+      status: completed ? 'completed' : 'active',
+      completedMonths,
+      lastProgressDay: enrollment.lastProgressDay + progressedMonths * 30,
+    },
+  }
+  return completed ? applyCompletionEffects(next, enrollment.pathId) : next
+}
+
+function applyCompletionEffects(state: GameState, pathId: EducationPathId): GameState {
+  switch (pathId) {
+    case 'eja':
+      return awardSavvy(trainAffinity(state, 'gab'), 60)
+    case 'technical':
+      return withMonthlyIncome(trainAffinity(state, 'grit'), 40_000)
+    case 'public_college':
+      return withMonthlyIncome(awardSavvy(trainAffinity(state, 'instinct', 2), 120), 100_000)
+    case 'private_college':
+      return withMonthlyIncome(awardSavvy(trainAffinity(state, 'gab', 2), 80), 120_000)
+    case 'free_course':
+      return awardSavvy(trainAffinity(state, 'instinct'), 35)
+  }
+}
+
+function withMonthlyIncome(state: GameState, delta: Centavos): GameState {
+  return {
+    ...state,
+    player: { ...state.player, monthlyIncome: state.player.monthlyIncome + delta },
+  }
 }

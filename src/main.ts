@@ -11,7 +11,12 @@ import { getView as battleView } from './core/desenrolo/desenrolo.js'
 import { mountBackdrop } from './engine/backdrop.js'
 import { AudioDirector } from './engine/audio.js'
 import { allCommutes, type TravelMode } from './core/life/commute.js'
-import { allEducationAssessments } from './core/life/education.js'
+import {
+  allEducationAssessments,
+  educationPaths,
+  enrollInEducation,
+  type EducationPathId,
+} from './core/life/education.js'
 import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.js'
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
@@ -109,6 +114,13 @@ function chooseTravelMode(mode: TravelMode): void {
   state = { ...state, player: { ...state.player, preferredTravelMode: mode } }
   save(storage, AUTOSAVE_SLOT, state, browserClock.now())
   audio.cue('choice:travel-mode')
+  render()
+}
+function chooseEducation(pathId: EducationPathId): void {
+  if (!state) return
+  state = enrollInEducation(state, pathId)
+  save(storage, AUTOSAVE_SLOT, state, browserClock.now())
+  audio.cue('choice:education')
   render()
 }
 function title(): string {
@@ -222,7 +234,11 @@ function menu(): string {
   })
   const difficulty = (score: number): string =>
     score <= 8 ? 'cabe na rotina' : score <= 18 ? 'exige rearranjo' : 'sacrifício alto'
-  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3><div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}</small></article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
+  const enrollment = state!.education
+  const educationStatus = enrollment
+    ? `<p><b>${educationPaths[enrollment.pathId].name}</b><br>${enrollment.status === 'completed' ? 'Concluído' : `${enrollment.completedMonths}/${educationPaths[enrollment.pathId].durationMonths} meses concluídos`}</p>`
+    : '<p>Nenhuma matrícula ativa.</p>'
+  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3>${educationStatus}<div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês · ${option.path.durationMonths} meses</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}<br>${option.path.completionDescription}</small>${enrollment?.status === 'active' ? '' : `<button data-education="${option.path.id}">Matricular</button>`}</article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
 }
 function debug(): string {
   return `<aside class="debug"><b>DEBUG · F3</b><pre>${JSON.stringify({ mode: state!.mode, place: state!.place, seed: state!.seed, rng: state!.rngState }, null, 2)}</pre>${telemetry
@@ -277,6 +293,11 @@ function bind(): void {
   ui.querySelectorAll<HTMLButtonElement>('[data-travel-mode]').forEach((button) =>
     button.addEventListener('click', () =>
       chooseTravelMode(button.dataset.travelMode as TravelMode)
+    )
+  )
+  ui.querySelectorAll<HTMLButtonElement>('[data-education]').forEach((button) =>
+    button.addEventListener('click', () =>
+      chooseEducation(button.dataset.education as EducationPathId)
     )
   )
   ui.querySelector<HTMLButtonElement>('.selected')?.focus({ preventScroll: true })

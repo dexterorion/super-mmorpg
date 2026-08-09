@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { ArchetypeId } from '../types.js'
-import { allEducationAssessments, assessEducation } from './education.js'
+import { createInitialState } from '../state/state.js'
+import {
+  advanceEducation,
+  allEducationAssessments,
+  assessEducation,
+  enrollInEducation,
+} from './education.js'
 
 const archetypes: readonly ArchetypeId[] = [
   'pedreiro',
@@ -55,5 +61,39 @@ describe('education and social mobility', () => {
       scheduleFlexibility: 0.1,
     })
     expect(publicCollege.timePressure).toBeGreaterThan(publicCollege.moneyPressure)
+  })
+
+  it.each(['eja', 'technical', 'public_college', 'private_college', 'free_course'] as const)(
+    'allows enrollment in %s regardless of immediate feasibility',
+    (pathId) => {
+      const state = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 12 })
+      const enrolled = enrollInEducation(
+        { ...state, player: { ...state.player, money: 0 } },
+        pathId
+      )
+      expect(enrolled.education).toMatchObject({ pathId, status: 'active', completedMonths: 0 })
+    }
+  )
+
+  it('charges and advances one monthly cycle after 30 days', () => {
+    const state = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 12 })
+    const enrolled = enrollInEducation(state, 'technical')
+    const advanced = advanceEducation({ ...enrolled, clock: { ...enrolled.clock, day: 31 } })
+    expect(advanced.education).toMatchObject({ status: 'active', completedMonths: 1 })
+    expect(advanced.player.money).toBe(state.player.money - 18_000)
+  })
+
+  it('catches up multiple months and applies completion effects once', () => {
+    const state = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 12 })
+    const enrolled = enrollInEducation(state, 'free_course')
+    const completed = advanceEducation({
+      ...enrolled,
+      clock: { ...enrolled.clock, day: 121 },
+    })
+    expect(completed.education).toMatchObject({ status: 'completed', completedMonths: 3 })
+    expect(completed.player.stats.instinct).toBe(state.player.stats.instinct + 1)
+
+    const reconciledAgain = advanceEducation(completed)
+    expect(reconciledAgain.player.stats).toEqual(completed.player.stats)
   })
 })

@@ -26,6 +26,7 @@ import {
 } from './economy/economy.js'
 import { isFlagTrue, withFlag, type GameState } from './state/state.js'
 import { estimateCommute, type TravelMode } from './life/commute.js'
+import { advanceEducation } from './life/education.js'
 
 /**
  * The one surface everything drives the game through.
@@ -104,7 +105,7 @@ export class GameSession {
 
   /** Reconciles a freshly created or loaded state before either driver renders it. */
   begin(state: GameState): PerformResult {
-    return { state: this.reconcile(state, true), events: [] }
+    return { state: this.reconcile(advanceEducation(state), true), events: [] }
   }
 
   // --- Lookups (bound so they can be passed as ports) -------------------
@@ -345,7 +346,7 @@ export class GameSession {
       elapsedMinutes: result.state.elapsedMinutes + SECONDS_PER_ACTION[action.kind] / 60,
     }
     return {
-      state: this.reconcile(withTime, result.state.place !== state.place),
+      state: this.reconcile(advanceEducation(withTime), result.state.place !== state.place),
       events: result.events,
     }
   }
@@ -521,6 +522,7 @@ export class GameSession {
         player: { ...next.player, energy: Math.round(next.player.energyMax * 0.6) },
         journal: next.journal,
       }
+      next = advanceEducation(next)
     }
 
     return next

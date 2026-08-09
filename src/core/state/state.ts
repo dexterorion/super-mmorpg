@@ -19,6 +19,7 @@ import type {
 } from '../types.js'
 import type { DesenroloBattle } from '../desenrolo/battle.js'
 import type { TravelMode } from '../life/commute.js'
+import type { EducationEnrollment } from '../life/education.js'
 
 /**
  * The whole game, as one plain serialisable object.
@@ -28,7 +29,7 @@ import type { TravelMode } from '../life/commute.js'
  * — which is how we search for softlocks without replaying from the start.
  */
 
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 
 export interface PlayerStats {
   /** Manha — the level. Rises by learning about the city, never by fighting. */
@@ -122,6 +123,7 @@ export interface GameState {
   readonly inventory: Readonly<Record<ItemId, number>>
   /** -3 (burned a bridge) .. +5 (would show up in the rain for you). */
   readonly relationships: Readonly<Record<NpcId, number>>
+  readonly education: EducationEnrollment | null
 
   /** Dialogue nodes already seen, so NPCs stop repeating themselves. */
   readonly seenNodes: readonly NodeId[]
@@ -188,6 +190,7 @@ export function createInitialState(options: NewGameOptions): GameState {
     journal: [],
     inventory: {},
     relationships: {},
+    education: null,
 
     seenNodes: [],
     clearedDesenrolos: [],
