@@ -47,6 +47,19 @@ button {
 .archetypes small {
   color: var(--mist);
 }
+.commutes {
+  display: grid;
+  gap: 5px;
+}
+.commutes span {
+  padding: 7px 9px;
+  color: var(--mist);
+  background: #101923;
+  border-left: 3px solid #718493;
+}
+.commutes b {
+  color: var(--amber);
+}
 #game-canvas {
   position: fixed;
   inset: 0;

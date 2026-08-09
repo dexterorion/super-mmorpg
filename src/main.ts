@@ -10,6 +10,7 @@ import { getView as dialogueView } from './core/dialogue/dialogue.js'
 import { getView as battleView } from './core/desenrolo/desenrolo.js'
 import { mountBackdrop } from './engine/backdrop.js'
 import { AudioDirector } from './engine/audio.js'
+import { allCommutes, type TravelMode } from './core/life/commute.js'
 import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.js'
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
@@ -177,7 +178,20 @@ function endingTitle(id: string): string {
   )
 }
 function menu(): string {
-  return `<aside class="menu"><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
+  const player = state!.player
+  const home = housing[player.housing]
+  const modeName: Record<TravelMode, string> = {
+    walk: 'A pé',
+    bike: 'Bike',
+    bus: 'Busão',
+    metro: 'Metrô',
+  }
+  const estimates = allCommutes({
+    referenceMinutes: home.commuteMinutes,
+    peak: state!.clock.period !== 'night',
+    raining: true,
+  })
+  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<span><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</span>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
 }
 function debug(): string {
   return `<aside class="debug"><b>DEBUG · F3</b><pre>${JSON.stringify({ mode: state!.mode, place: state!.place, seed: state!.seed, rng: state!.rngState }, null, 2)}</pre>${telemetry
