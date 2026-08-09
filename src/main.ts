@@ -1,5 +1,7 @@
 import './style.css'
 import { content } from './content/index.js'
+import { archetypes } from './content/archetypes.js'
+import type { ArchetypeId } from './core/types.js'
 import { createInitialState, type GameState } from './core/state/state.js'
 import { GameSession } from './core/session.js'
 import { AUTOSAVE_SLOT, load, save, SLOTS, type Slot } from './core/save/save.js'
@@ -26,6 +28,7 @@ let menuOpen = false
 let debugOpen = false
 let selected = 0
 let previousPeriod = ''
+let creatingCharacter = false
 world.onAction((actionId) => act(actionId))
 world.onPrompt((label) => {
   worldPrompt.textContent = label ? `ESPAÇO · ${label}` : ''
@@ -38,9 +41,20 @@ function money(value: number): string {
 function period(value: GameState['clock']['period']): string {
   return { morning: 'Manhã', afternoon: 'Tarde', night: 'Noite' }[value]
 }
-function start(): void {
+function start(archetype: ArchetypeId): void {
   audio.start()
-  const created = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 42 })
+  const selectedArchetype = archetypes[archetype]
+  const created = createInitialState({
+    name: 'Jaci',
+    hometown: 'prudente',
+    seed: 42,
+    archetype,
+    profile: {
+      startingMoney: selectedArchetype.startingMoney,
+      energy: selectedArchetype.energy,
+      stats: selectedArchetype.stats,
+    },
+  })
   state = session.begin(created).state
   previousPeriod = state.clock.period
   telemetry.emit({ name: 'game_started', at: browserClock.now(), fields: { seed: state.seed } })
@@ -91,7 +105,16 @@ function title(): string {
 function render(): void {
   if (!state) {
     const canContinue = saveSlots.some((slot) => load(storage, slot).ok)
-    ui.innerHTML = `<div class="title-card"><p class="route">TIETÊ · 05:10</p><h1>GAROA</h1><p class="tagline">A cidade não te espera.</p><div class="actions"><button data-command="new">Novo jogo</button>${canContinue ? '<button data-command="continue">Continuar</button>' : ''}</div><p class="keys">Setas/WASD · Enter · Esc · F3</p></div>`
+    ui.innerHTML = creatingCharacter
+      ? `<div class="title-card character-creation"><p class="route">ESCOLHA UM PONTO DE PARTIDA</p><h1>Quem chega?</h1><p class="tagline">Arquétipo não é destino. É onde sua vida começa.</p><div class="archetypes">${Object.values(
+          archetypes
+        )
+          .map(
+            (entry) =>
+              `<button data-archetype="${entry.id}"><b>${entry.name}</b><span>${entry.description}</span><small>${money(entry.monthlyIncome)}/mês</small></button>`
+          )
+          .join('')}</div><button data-command="back">Voltar</button></div>`
+      : `<div class="title-card"><p class="route">TIETÊ · 05:10</p><h1>GAROA</h1><p class="tagline">A cidade não te espera.</p><div class="actions"><button data-command="new">Novo jogo</button>${canContinue ? '<button data-command="continue">Continuar</button>' : ''}</div><p class="keys">Setas/WASD · Enter · Esc · F3</p></div>`
     bind()
     return
   }
@@ -151,7 +174,17 @@ function bind(): void {
   ui.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((button) =>
     button.addEventListener('click', () => act(button.dataset.action!))
   )
-  ui.querySelector('[data-command="new"]')?.addEventListener('click', start)
+  ui.querySelector('[data-command="new"]')?.addEventListener('click', () => {
+    creatingCharacter = true
+    render()
+  })
+  ui.querySelector('[data-command="back"]')?.addEventListener('click', () => {
+    creatingCharacter = false
+    render()
+  })
+  ui.querySelectorAll<HTMLElement>('[data-archetype]').forEach((button) =>
+    button.addEventListener('click', () => start(button.dataset.archetype as ArchetypeId))
+  )
   ui.querySelector('[data-command="continue"]')?.addEventListener('click', continueGame)
   ui.querySelector('[data-command="sound"]')?.addEventListener('click', () => {
     audio.start()

@@ -1,5 +1,6 @@
 import type {
   ActId,
+  ArchetypeId,
   Affinity,
   Centavos,
   DesenroloId,
@@ -25,7 +26,7 @@ import type { DesenroloBattle } from '../desenrolo/battle.js'
  * — which is how we search for softlocks without replaying from the start.
  */
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export interface PlayerStats {
   /** Manha — the level. Rises by learning about the city, never by fighting. */
@@ -45,6 +46,7 @@ export const SAVVY_MAX = 10
 export interface PlayerState {
   readonly name: string
   readonly hometown: Hometown
+  readonly archetype: ArchetypeId
   readonly stats: PlayerStats
   /** Grana, in centavos. */
   readonly money: Centavos
@@ -126,12 +128,20 @@ export interface NewGameOptions {
   readonly name: string
   readonly hometown: Hometown
   readonly seed: number
+  readonly archetype?: ArchetypeId
+  readonly profile?: {
+    readonly startingMoney: Centavos
+    readonly energy: number
+    readonly stats: PlayerStats
+  }
 }
 
 export const STARTING_MONEY: Centavos = 34_000 // R$ 340,00
 export const STARTING_ENERGY = 60
 
 export function createInitialState(options: NewGameOptions): GameState {
+  const archetype = options.archetype ?? 'artista'
+  const profile = options.profile
   return {
     schemaVersion: SCHEMA_VERSION,
     seed: options.seed,
@@ -140,10 +150,11 @@ export function createInitialState(options: NewGameOptions): GameState {
     player: {
       name: options.name,
       hometown: options.hometown,
-      stats: { savvy: 1, savvyXp: 0, gab: 1, instinct: 1, grit: 2 },
-      money: STARTING_MONEY,
-      energy: STARTING_ENERGY,
-      energyMax: STARTING_ENERGY,
+      archetype,
+      stats: profile?.stats ?? { savvy: 1, savvyXp: 0, gab: 1, instinct: 1, grit: 2 },
+      money: profile?.startingMoney ?? STARTING_MONEY,
+      energy: profile?.energy ?? STARTING_ENERGY,
+      energyMax: profile?.energy ?? STARTING_ENERGY,
       transit: 0,
     },
     clock: { day: 1, period: 'morning' },

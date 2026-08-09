@@ -55,9 +55,10 @@ export type LoadResult =
 type Migration = (raw: Record<string, unknown>) => Record<string, unknown>
 
 const MIGRATIONS: Readonly<Record<number, Migration>> = {
-  // v1 is the first published schema. Example of the shape a future one takes:
-  //
-  // 1: (raw) => ({ ...raw, player: { ...(raw.player as object), newField: 0 } }),
+  1: (raw) => ({
+    ...raw,
+    player: { ...(raw.player as object), archetype: 'artista' },
+  }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -187,6 +188,14 @@ function isGameState(value: unknown): value is GameState {
     typeof value.rngState === 'number' &&
     typeof value.player.name === 'string' &&
     isOneOf(value.player.hometown, ['prudente', 'bauru', 'barretos']) &&
+    isOneOf(value.player.archetype, [
+      'pedreiro',
+      'faria_limer',
+      'artista',
+      'entregador',
+      'estudante',
+      'saude',
+    ]) &&
     numbers(value.player.stats, ['savvy', 'savvyXp', 'gab', 'instinct', 'grit']) &&
     typeof value.player.money === 'number' &&
     Number.isSafeInteger(value.player.money) &&

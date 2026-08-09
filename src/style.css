@@ -21,6 +21,32 @@ body {
 button {
   font: inherit;
 }
+.archetypes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.archetypes button {
+  display: grid;
+  gap: 7px;
+  min-height: 116px;
+  padding: 14px;
+  color: var(--paper);
+  text-align: left;
+  background: #1e2a36ee;
+  border: 2px solid #718493;
+  cursor: pointer;
+}
+.archetypes button:hover,
+.archetypes button:focus {
+  border-color: var(--amber);
+  translate: 0 -2px;
+}
+.archetypes span,
+.archetypes small {
+  color: var(--mist);
+}
 #game-canvas {
   position: fixed;
   inset: 0;

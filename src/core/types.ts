@@ -26,6 +26,8 @@ export type FlagId = string
 export type Centavos = number
 
 export type Hometown = 'prudente' | 'bauru' | 'barretos'
+export type ArchetypeId =
+  'pedreiro' | 'faria_limer' | 'artista' | 'entregador' | 'estudante' | 'saude'
 
 export type Period = 'morning' | 'afternoon' | 'night'
 
