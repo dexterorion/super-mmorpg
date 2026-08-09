@@ -59,6 +59,16 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
     ...raw,
     player: { ...(raw.player as object), archetype: 'artista' },
   }),
+  2: (raw) => ({
+    ...raw,
+    player: {
+      ...(raw.player as object),
+      occupation: 'Produção cultural',
+      monthlyIncome: 190_000,
+      housing: 'pensao_bixiga',
+      monthlyRent: 95_000,
+    },
+  }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -196,6 +206,16 @@ function isGameState(value: unknown): value is GameState {
       'estudante',
       'saude',
     ]) &&
+    typeof value.player.occupation === 'string' &&
+    typeof value.player.monthlyIncome === 'number' &&
+    isOneOf(value.player.housing, [
+      'pensao_bixiga',
+      'kitnet_centro',
+      'apartamento_zona_leste',
+      'quarto_guarulhos',
+      'studio_copan',
+    ]) &&
+    typeof value.player.monthlyRent === 'number' &&
     numbers(value.player.stats, ['savvy', 'savvyXp', 'gab', 'instinct', 'grit']) &&
     typeof value.player.money === 'number' &&
     Number.isSafeInteger(value.player.money) &&

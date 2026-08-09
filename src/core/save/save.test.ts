@@ -77,6 +77,23 @@ describe('serialize / deserialize', () => {
     expect(result.migrated).toBe(false)
   })
 
+  it('migrates a v2 archetype save to the housing model', () => {
+    const oldState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    const oldPlayer = oldState.player as Record<string, unknown>
+    delete oldPlayer.occupation
+    delete oldPlayer.monthlyIncome
+    delete oldPlayer.housing
+    delete oldPlayer.monthlyRent
+    const result = deserialize(JSON.stringify({ version: 2, savedAt: 1, state: oldState }))
+    expect(result).toMatchObject({ ok: true, migrated: true })
+    if (!result.ok) return
+    expect(result.state.player).toMatchObject({
+      occupation: 'Produção cultural',
+      housing: 'pensao_bixiga',
+      monthlyRent: 95_000,
+    })
+  })
+
   it('reports unparseable text as corrupt instead of throwing', () => {
     const result = deserialize('{{{not json')
     expect(result).toMatchObject({ ok: false, reason: 'corrupt' })

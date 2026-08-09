@@ -22,6 +22,7 @@ test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName
   await page.getByRole('button', { name: 'Novo jogo' }).focus()
   await page.keyboard.press('Enter')
   await page.getByRole('button', { name: /Artista/ }).click()
+  await page.getByRole('button', { name: /Quarto em pensão/ }).click()
   await expect(page.getByText('5h10. O ônibus para')).toBeVisible()
   if (browserName === 'chromium') await shot(page, '02-arrival')
   await page.keyboard.press('Enter')
@@ -67,6 +68,7 @@ test('complete five-act campaign through the real UI', async ({ page, browserNam
   await page.goto('/')
   await page.getByRole('button', { name: 'Novo jogo' }).click()
   await page.getByRole('button', { name: /Artista/ }).click()
+  await page.getByRole('button', { name: /Quarto em pensão/ }).click()
   const usedArguments = new Set<string>()
   const captured = new Set<string>()
   let talkedToJorge = false

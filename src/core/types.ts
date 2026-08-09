@@ -28,6 +28,8 @@ export type Centavos = number
 export type Hometown = 'prudente' | 'bauru' | 'barretos'
 export type ArchetypeId =
   'pedreiro' | 'faria_limer' | 'artista' | 'entregador' | 'estudante' | 'saude'
+export type HousingId =
+  'pensao_bixiga' | 'kitnet_centro' | 'apartamento_zona_leste' | 'quarto_guarulhos' | 'studio_copan'
 
 export type Period = 'morning' | 'afternoon' | 'night'
 

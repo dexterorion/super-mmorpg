@@ -17,6 +17,31 @@ import {
 } from './state.js'
 
 describe('state selectors and immutable helpers', () => {
+  it('creates a life-path profile with occupation and housing', () => {
+    const initial = createInitialState({
+      name: 'Jaci',
+      hometown: 'prudente',
+      seed: 4,
+      archetype: 'pedreiro',
+      profile: {
+        startingMoney: 42_000,
+        energy: 70,
+        stats: { savvy: 1, savvyXp: 0, gab: 1, instinct: 1, grit: 3 },
+        occupation: 'Construção civil',
+        monthlyIncome: 280_000,
+        housing: 'quarto_guarulhos',
+        monthlyRent: 72_000,
+      },
+    })
+    expect(initial.player).toMatchObject({
+      archetype: 'pedreiro',
+      occupation: 'Construção civil',
+      housing: 'quarto_guarulhos',
+      money: 42_000,
+      energy: 70,
+    })
+  })
+
   it('reads and updates domain collections without mutating the source', () => {
     const initial = createInitialState({ name: 'Ana', hometown: 'bauru', seed: 1 })
     const flagged = withFlag(initial, 'ready', true)
