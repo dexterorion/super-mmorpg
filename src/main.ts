@@ -10,9 +10,11 @@ import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
 const root = document.querySelector<HTMLElement>('#app')!
-root.innerHTML = '<div id="game-canvas" aria-hidden="true"></div><section id="ui"></section>'
-mountBackdrop('game-canvas')
+root.innerHTML =
+  '<div id="game-canvas" aria-hidden="true"></div><div id="world-prompt"></div><section id="ui"></section>'
+const world = mountBackdrop('game-canvas')
 const ui = document.querySelector<HTMLElement>('#ui')!
+const worldPrompt = document.querySelector<HTMLElement>('#world-prompt')!
 const session = new GameSession(content)
 const storage = new LocalSaveStorage()
 const telemetry = new EventBus(import.meta.env.DEV ? new ConsoleExporter() : new NoopExporter())
@@ -22,6 +24,11 @@ let menuOpen = false
 let debugOpen = false
 let selected = 0
 let previousPeriod = ''
+world.onAction((actionId) => act(actionId))
+world.onPrompt((label) => {
+  worldPrompt.textContent = label ? `ESPAÇO · ${label}` : ''
+  worldPrompt.classList.toggle('visible', label !== undefined)
+})
 
 function money(value: number): string {
   return `R$ ${(value / 100).toFixed(2).replace('.', ',')}`
@@ -37,9 +44,7 @@ function start(): void {
   render()
 }
 function continueGame(): void {
-  const loaded = saveSlots
-    .map((slot) => load(storage, slot))
-    .find((candidate) => candidate.ok)
+  const loaded = saveSlots.map((slot) => load(storage, slot)).find((candidate) => candidate.ok)
   if (!loaded?.ok) return
   state = session.begin(loaded.state).state
   previousPeriod = state.clock.period
@@ -88,16 +93,43 @@ function render(): void {
   const actions = session.availableActions(state)
   const dialogue = dialogueView(state, session.dialogueLookup)
   const battle = battleView(state, session.desenroloLookup)
+  const exploring = state.mode.kind === 'world'
   const copy =
     state.mode.kind === 'ended'
-      ? '<strong>Fim do Ato 1</strong><span>A pista aponta para a Paulista.</span>'
+      ? `<strong>Fim · ${endingTitle(state.mode.endingId)}</strong><span>A garoa continua. A cidade também.</span>`
       : dialogue
         ? `<strong>${dialogue.line}</strong><span>${dialogue.lineIndex + 1}/${dialogue.lineCount}</span>`
         : battle
           ? `<strong>${battle.transcript.at(-1)?.text ?? battle.subtitle ?? ''}</strong><span>Paciência ${battle.patience}/${battle.patienceMax} · turno ${battle.turn}</span>`
-          : `<strong>${content.places[state.place]?.blurb ?? 'A cidade segue em movimento.'}</strong><span>Escolha o próximo passo.</span>`
-  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${period(state.clock.period)}</b></span></header><section class="scene"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><button class="menu-button" data-command="menu">Caderninho</button>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
+          : `<strong>${content.places[state.place]?.blurb ?? 'Explore o bairro.'}</strong><span>Ande com as setas/WASD. Aproxime-se e use Espaço.</span>`
+  ui.innerHTML = `<header class="hud"><span>GRANA <b>${money(state.player.money)}</b></span><span>DISPOSIÇÃO <b>${state.player.energy}/${state.player.energyMax}</b></span><span>BILHETE <b>${money(state.player.transit)}</b></span><span>DIA <b>${state.clock.day} · ${period(state.clock.period)}</b></span></header><section class="scene ${exploring ? 'exploring' : ''}"><p class="route">ATO ${state.act} · ${state.district.toUpperCase()}</p><h2>${title()}</h2><div class="dialogue">${copy}</div><div class="actions ${exploring ? 'world-actions' : ''}">${actions.map((item, index) => `<button data-action="${item.id}" ${item.enabled ? '' : 'disabled'} class="${index === selected ? 'selected' : ''}">${item.label}${item.lockedReason ? ` <small>— ${item.lockedReason}</small>` : ''}</button>`).join('')}</div></section><button class="menu-button" data-command="menu">Caderninho</button>${menuOpen ? menu() : ''}${debugOpen ? debug() : ''}`
   bind()
+  world.sync({
+    placeId: state.place,
+    placeName: content.places[state.place]?.name ?? state.place,
+    district: state.district,
+    actors: actions
+      .filter((item) => item.enabled && (item.group === 'people' || item.group === 'act'))
+      .map((item) => ({
+        id: item.id,
+        label: item.label,
+        kind: item.group === 'people' ? ('npc' as const) : ('action' as const),
+      })),
+    exits: actions
+      .filter((item) => item.enabled && item.group === 'move')
+      .map((item) => ({ actionId: item.id, label: item.label })),
+    enabled: exploring && !menuOpen,
+  })
+}
+function endingTitle(id: string): string {
+  return (
+    {
+      rede_fica: 'A rede fica',
+      rede_vai: 'Voltar também é caminho',
+      horizonte_fica: 'Reconstruir pontes',
+      horizonte_vai: 'Outra manhã',
+    }[id] ?? 'Fim de GAROA'
+  )
 }
 function menu(): string {
   return `<aside class="menu"><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
@@ -139,6 +171,7 @@ window.addEventListener('keydown', (event) => {
     return
   }
   if (!state || menuOpen) return
+  if (state.mode.kind === 'world') return
   const actions = session.availableActions(state).filter((item) => item.enabled)
   if (['ArrowDown', 's', 'ArrowRight', 'd'].includes(event.key)) {
     event.preventDefault()

@@ -2,11 +2,13 @@
 
 Um RPG 2D sobre chegar a São Paulo às 5h da manhã com R$ 340, o endereço de um primo desaparecido e nenhuma certeza de como a cidade funciona.
 
-![Tela de chegada de GAROA](docs/screenshots/arrival.png)
+![Exploração top-down em GAROA](docs/screenshots/exploration.png)
 
 ## Estado do jogo
 
-O Ato 1 é uma fatia vertical jogável do começo ao fim no navegador. Ele inclui exploração entre Tietê, Centro e Bixiga, diálogos ramificados, transporte público, saves, Caderninho e dois **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa.
+A campanha completa, em cinco atos, é jogável do começo ao fim no navegador. Ela atravessa Tietê, Centro, Bixiga, Liberdade, Paulista, Zona Leste e Minhocão, com diálogos ramificados, transporte público, saves, Caderninho e seis **Desenrolos** — conflitos por argumentação em que o adversário é uma situação, nunca uma pessoa.
+
+Uma escolha na Horizonte Urbano e o destino de Val formam quatro finais distintos.
 
 O conteúdo está em pt-BR. Código, identificadores e documentação técnica usam inglês.
 
@@ -24,13 +26,21 @@ Abra `http://localhost:5173`. Use setas ou WASD para navegar, Enter/Espaço para
 
 ## Screenshots
 
-| Título | Desenrolo |
-| --- | --- |
+| Título                                | Desenrolo                                    |
+| ------------------------------------- | -------------------------------------------- |
 | ![Título](docs/screenshots/title.png) | ![Desenrolo](docs/screenshots/desenrolo.png) |
 
-| Chegada | Caderninho e saves |
-| --- | --- |
+| Chegada                                  | Caderninho e saves                             |
+| ---------------------------------------- | ---------------------------------------------- |
 | ![Chegada](docs/screenshots/arrival.png) | ![Caderninho](docs/screenshots/caderninho.png) |
+
+| Exploração top-down                             | NPC no Anhangabaú                |
+| ----------------------------------------------- | -------------------------------- |
+| ![Exploração](docs/screenshots/exploration.png) | ![NPC](docs/screenshots/npc.png) |
+
+| Enchente na Zona Leste                     | Final no Minhocão                     |
+| ------------------------------------------ | ------------------------------------- |
+| ![Enchente](docs/screenshots/enchente.png) | ![Final](docs/screenshots/ending.png) |
 
 ## Arquitetura
 

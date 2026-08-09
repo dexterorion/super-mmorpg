@@ -164,6 +164,20 @@ export const art: Readonly<Record<string, ArtDef>> = {
   },
 }
 
+for (const key of [
+  'calcada_portuguesa',
+  'asfalto_molhado',
+  'grafite',
+  'poste',
+  'banca_jornal',
+  'mureta_viaduto',
+  'azulejo_pensao',
+  'fachada_cantina',
+]) {
+  const definition = art[key]
+  if (definition) (art as Record<string, ArtDef>)[key] = { ...definition, scale: 2 }
+}
+
 const people = ['protagonista', 'ajudante', 'seu_jorge', 'dona_cida', 'yumi', 'tico'] as const
 const directions = ['down', 'left', 'right', 'up'] as const
 for (const [personIndex, person] of people.entries()) {
@@ -172,11 +186,19 @@ for (const [personIndex, person] of people.entries()) {
       const color = (((personIndex + 7) % 15) + 1).toString(16)
       const rows = Array.from({ length: 16 }, (_, y) =>
         Array.from({ length: 16 }, (_, x) => {
-          if (y < 3 || x < 4 || x > 11) return '.'
-          if (y < 7) return x > 5 && x < 10 ? color : '.'
-          if (y < 13) return color
-          const leftLeg = frame === 0 ? x < 7 : x > 8
-          return leftLeg ? color : '.'
+          if (y < 2 || x < 3 || x > 12) return '.'
+          if (y === 2) return x > 5 && x < 10 ? '2' : '.'
+          if (y < 7) {
+            if (x < 5 || x > 10) return '.'
+            if (y === 3 || x === 5 || x === 10) return '2'
+            if (direction === 'down' && y === 5 && (x === 6 || x === 9)) return '1'
+            return 'e'
+          }
+          if (y < 12) return x > 4 && x < 11 ? color : y < 10 && (x === 3 || x === 12) ? 'e' : '.'
+          if (y > 14) return '.'
+          const movingLeft = frame === 0 ? x > 4 && x < 7 : x > 5 && x < 8
+          const movingRight = frame === 0 ? x > 8 && x < 11 : x > 7 && x < 10
+          return movingLeft || movingRight ? '2' : '.'
         }).join('')
       )
       ;(art as Record<string, ArtDef>)[`${person}_${direction}_${frame}`] = { pixels: tile(rows) }

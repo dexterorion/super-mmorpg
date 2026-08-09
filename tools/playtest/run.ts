@@ -10,6 +10,7 @@ interface RunResult {
   readonly steps: number
   readonly path: readonly string[]
   readonly visited: readonly string[]
+  readonly ending?: string
   readonly error?: string
 }
 const args = process.argv.slice(2)
@@ -19,6 +20,8 @@ const valueAfter = (flag: string): string | undefined => {
 }
 const runs = Number(valueAfter('--runs') ?? 1_000)
 const requestedSeed = valueAfter('--seed')
+const horizonteChoice = valueAfter('--horizonte') === 'entrar' ? 'entrar' : 'recusar'
+const valChoice = valueAfter('--val') === 'vai' ? 'vai' : 'fica'
 const maxSteps = 500
 const session = new GameSession(content)
 
@@ -73,6 +76,12 @@ function scriptedChoice(
     'walk:bixiga_pensao_porta',
     'choice:pedir',
     'walk:bixiga_quarto',
+    'choice:fila',
+    'do:enfrentar_fila',
+    `choice:${horizonteChoice}`,
+    'choice:agua',
+    `choice:${valChoice}`,
+    'choice:responder',
   ]
   for (const id of ids) {
     const found = enabled.find((action) => action.id === id)
@@ -89,7 +98,14 @@ function run(seed: number, policy: 'scripted' | 'monkey'): RunResult {
   try {
     for (let step = 0; step < maxSteps; step += 1) {
       if (state.mode.kind === 'ended')
-        return { seed, ended: true, steps: step, path, visited: [...visited] }
+        return {
+          seed,
+          ended: true,
+          steps: step,
+          path,
+          visited: [...visited],
+          ending: state.mode.endingId,
+        }
       const actions = session.availableActions(state)
       const enabled = actions.filter((action) => action.enabled)
       if (enabled.length === 0)

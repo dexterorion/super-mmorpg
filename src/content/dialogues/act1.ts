@@ -241,8 +241,278 @@ export const dialoguesAct1 = {
             text: 'Val deixou uma pista sobre uma empresa na Paulista.',
             entryKind: 'lesson',
           },
-          { kind: 'endGame', endingId: 'act1_end' },
+          { kind: 'moveTo', district: 'liberdade', place: 'liberdade_estacao' },
         ],
+        end: true,
+      },
+    },
+  },
+  dlg_act2: {
+    id: 'dlg_act2',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'A pista da Paulista exige documentos que você ainda não tem.',
+          'Na Liberdade, uma fila já dobra a esquina.',
+        ],
+        onEnter: [
+          { kind: 'questStart', id: 'q_documents' },
+          {
+            kind: 'journal',
+            id: 'obj_documents',
+            text: 'Conseguir os documentos para procurar a empresa da Paulista.',
+            entryKind: 'objective',
+          },
+        ],
+        next: 'yumi',
+      },
+      yumi: {
+        id: 'yumi',
+        speaker: 'yumi',
+        lines: [
+          '“Se entrar sem saber o que pedem, você perde o dia.”',
+          'Yumi mostra os carimbos certos e aponta a menor fila.',
+        ],
+        onEnter: [
+          { kind: 'relationship', npc: 'yumi', delta: 1 },
+          { kind: 'affinity', affinity: 'instinct', delta: 1 },
+          {
+            kind: 'journal',
+            id: 'contact_yumi',
+            text: 'Yumi conhece os atalhos que continuam dentro da regra.',
+            entryKind: 'contact',
+          },
+        ],
+        choices: [
+          {
+            id: 'fila',
+            text: 'Encarar a repartição.',
+            effects: [{ kind: 'startDesenrolo', id: 'd_reparticao' }],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_act3: {
+    id: 'dlg_act3',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'renan',
+        lines: [
+          'A Horizonte Urbano ocupa um andar brilhante demais.',
+          'Renan sorri como quem reconhece outra pessoa do interior.',
+        ],
+        next: 'oferta',
+      },
+      oferta: {
+        id: 'oferta',
+        speaker: 'renan',
+        lines: ['“Aqui ninguém espera oportunidade. A gente vende uma.”'],
+        choices: [
+          {
+            id: 'entrar',
+            text: 'Entrar no esquema para ganhar rápido.',
+            effects: [
+              { kind: 'flag', id: 'joined_horizonte', value: true },
+              { kind: 'money', delta: 8000 },
+              { kind: 'startDesenrolo', id: 'd_entrevista' },
+            ],
+            exit: true,
+          },
+          {
+            id: 'recusar',
+            text: 'Recusar e procurar trabalho honesto.',
+            effects: [
+              { kind: 'flag', id: 'joined_horizonte', value: false },
+              { kind: 'relationship', npc: 'seu_jorge', delta: 1 },
+              { kind: 'startDesenrolo', id: 'd_entrevista' },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_act4: {
+    id: 'dlg_act4',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'tico',
+        lines: [
+          'A chuva fecha a Radial. A água já cobre o primeiro degrau.',
+          '“Val está do outro lado. Se for, vai com gente.”',
+        ],
+        onEnter: [
+          { kind: 'relationship', npc: 'tico', delta: 1 },
+          { kind: 'affinity', affinity: 'grit', delta: 1 },
+          {
+            kind: 'journal',
+            id: 'contact_tico',
+            text: 'Tico aparece quando a cidade para.',
+            entryKind: 'contact',
+          },
+        ],
+        choices: [
+          {
+            id: 'agua',
+            text: 'Atravessar com Tico.',
+            effects: [{ kind: 'startDesenrolo', id: 'd_agua' }],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_val: {
+    id: 'dlg_val',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'val',
+        lines: [
+          'Val espera numa garagem, com uma passagem de volta no bolso.',
+          '“Eu achei que sumir dava menos trabalho que admitir que deu errado.”',
+        ],
+        choices: [
+          {
+            id: 'fica',
+            text: 'Fica. A gente resolve sem fingir que está tudo bem.',
+            effects: [{ kind: 'flag', id: 'val_stays', value: true }],
+            next: 'seguir',
+          },
+          {
+            id: 'vai',
+            text: 'Voltar também pode ser uma escolha.',
+            effects: [{ kind: 'flag', id: 'val_stays', value: false }],
+            next: 'seguir',
+          },
+        ],
+      },
+      seguir: {
+        id: 'seguir',
+        lines: [
+          'Antes da despedida, chega uma mensagem de Renan.',
+          '“Minhocão. Domingo cedo. Vamos terminar essa conversa.”',
+        ],
+        onEnter: [
+          { kind: 'act', act: 5 },
+          { kind: 'moveTo', district: 'minhocao', place: 'minhocao_domingo' },
+        ],
+        end: true,
+      },
+    },
+  },
+  dlg_final: {
+    id: 'dlg_final',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'renan',
+        lines: [
+          'Sem carros, o Minhocão parece outra cidade.',
+          '“Você ainda acha que São Paulo premia quem joga limpo?”',
+        ],
+        choices: [
+          {
+            id: 'responder',
+            text: 'A cidade não é prêmio. É gente.',
+            effects: [{ kind: 'startDesenrolo', id: 'd_renan' }],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_epilogo: {
+    id: 'dlg_epilogo',
+    start: 'start',
+    nodes: {
+      start: { id: 'start', lines: [], next: 'route_clean' },
+      route_clean: {
+        id: 'route_clean',
+        lines: [],
+        conditions: [{ kind: 'flag', id: 'joined_horizonte', equals: false }],
+        fallback: 'route_scheme',
+        next: 'clean_val',
+      },
+      route_scheme: { id: 'route_scheme', lines: [], next: 'scheme_val' },
+      clean_val: {
+        id: 'clean_val',
+        lines: [],
+        conditions: [{ kind: 'flag', id: 'val_stays' }],
+        fallback: 'clean_home',
+        next: 'clean_stays',
+      },
+      clean_stays: {
+        id: 'clean_stays',
+        lines: [
+          'Val fica. Você segue devagar, cercado pela rede que construiu.',
+          'A garoa cai sem pedir licença. Pela primeira vez, você conhece o caminho.',
+        ],
+        next: 'end_rede_fica',
+      },
+      end_rede_fica: {
+        id: 'end_rede_fica',
+        lines: [],
+        onEnter: [{ kind: 'endGame', endingId: 'rede_fica' }],
+        end: true,
+      },
+      clean_home: {
+        id: 'clean_home',
+        lines: [
+          'Val volta para casa sem fugir. Você fica, com amigos e trabalho honesto.',
+          'A garoa apaga as últimas marcas da chuva.',
+        ],
+        next: 'end_rede_vai',
+      },
+      end_rede_vai: {
+        id: 'end_rede_vai',
+        lines: [],
+        onEnter: [{ kind: 'endGame', endingId: 'rede_vai' }],
+        end: true,
+      },
+      scheme_val: {
+        id: 'scheme_val',
+        lines: [],
+        conditions: [{ kind: 'flag', id: 'val_stays' }],
+        fallback: 'scheme_home',
+        next: 'scheme_stays',
+      },
+      scheme_stays: {
+        id: 'scheme_stays',
+        lines: [
+          'Val fica, mas a confiança leva tempo. Você começa devolvendo o que tomou.',
+          'No domingo seguinte, há menos gente ao seu lado — mas ainda há caminho.',
+        ],
+        next: 'end_horizonte_fica',
+      },
+      end_horizonte_fica: {
+        id: 'end_horizonte_fica',
+        lines: [],
+        onEnter: [{ kind: 'endGame', endingId: 'horizonte_fica' }],
+        end: true,
+      },
+      scheme_home: {
+        id: 'scheme_home',
+        lines: [
+          'Val parte. Você abandona a Horizonte e encara as pontes que queimou.',
+          'A garoa não absolve ninguém. Só oferece outra manhã.',
+        ],
+        next: 'end_horizonte_vai',
+      },
+      end_horizonte_vai: {
+        id: 'end_horizonte_vai',
+        lines: [],
+        onEnter: [{ kind: 'endGame', endingId: 'horizonte_vai' }],
         end: true,
       },
     },
