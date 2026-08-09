@@ -16,11 +16,13 @@ como contexto e parâmetros de jogo; GAROA não reproduz textos ou fotografias.
 
 - [Censo 2022 — deslocamento para estudo e trabalho](https://educa.ibge.gov.br/jovens/materias-especiais/23064-censo-2022-como-a-populacao-se-desloca-para-estudar-e-trabalhar.html)
 - [Censo 2022 — resultados de deslocamento](https://www.ibge.gov.br/estatisticas/Sociais/populacao/22827-censo-demografico-2022.html?edicao=44665)
-- [Comunicados do Copom](https://www.bcb.gov.br/controleinflacao/comunicadoscopom)
+- [Copom reduz a Selic para 14,25% ao ano — BCB, 17/06/2026](https://www.bcb.gov.br/controleinflacao/comunicadoscopom)
+- [IPCA fecha 2025 em 4,26%; aluguel residencial sobe 6,06% — IBGE, 09/01/2026](https://agenciadenoticias.ibge.gov.br/agencia-sala-de-imprensa/2013-agencia-de-noticias/releases/45612-ipca-vai-a-0-33-em-dezembro-e-fecha-o-ano-em-4-26)
+- [Novo Caged: construção gera 192.176 postos formais de janeiro a novembro de 2025 — MTE, 30/12/2025](https://www.gov.br/trabalho-e-emprego/pt-br/noticias-e-conteudo/2025/dezembro/pais-registra-saldo-positivo-de-85-8-mil-vagas-em-novembro/)
 
 ## Crime econômico e instituições
 
-- [Receita Federal e MPSP — cooperação contra estruturas econômicas do crime organizado](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/maio/receita-federal-e-mpsp-intensificam-ofensiva-contra-o-crime-organizado/)
+- [Receita Federal e MPSP — cooperação contra estruturas econômicas do crime organizado, 28/05/2026](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/maio/receita-federal-e-mpsp-intensificam-ofensiva-contra-o-crime-organizado/)
 
 Eventos inspirados em fatos terão data e fonte dentro do Caderninho. Pessoas e
 empresas fictícias não serão apresentadas como participantes de casos reais.
