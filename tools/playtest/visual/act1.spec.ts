@@ -55,6 +55,10 @@ test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName
   const busMode = page.locator('[data-travel-mode="bus"]')
   await busMode.click()
   await expect(busMode).toHaveClass(/active/)
+  await expect(
+    page.getByRole('heading', { name: 'Estudar é possível. O caminho não é igual.' })
+  ).toBeVisible()
+  await expect(page.getByText(/Curso técnico/)).toBeVisible()
   await page.locator('[data-slot="1"]').click()
   if (browserName === 'chromium') await shot(page, '04-caderninho')
   await page.getByRole('button', { name: 'Fechar' }).click()

@@ -67,6 +67,25 @@ button {
 .commutes button b {
   color: var(--amber);
 }
+.education {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.education article {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  color: var(--mist);
+  background: #101923;
+  border-left: 3px solid var(--green);
+}
+.education article b {
+  color: var(--paper);
+}
+.education article small {
+  color: var(--amber);
+}
 #game-canvas {
   position: fixed;
   inset: 0;
