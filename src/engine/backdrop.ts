@@ -67,6 +67,11 @@ export class WorldScene extends Phaser.Scene {
       frameHeight: 170,
       endFrame: 71,
     })
+    this.load.spritesheet('garoa-npcs-v3', 'assets/garoa-characters-v3/characters-sheet.png', {
+      frameWidth: 128,
+      frameHeight: 170,
+      endFrame: 71,
+    })
   }
   create(): void {
     bridge.scene = this
@@ -156,8 +161,8 @@ export class WorldScene extends Phaser.Scene {
       const sprite =
         actor.kind === 'npc'
           ? this.physics.add
-              .staticSprite(x, y, 'garoa-people-v2', npcFrame(actor.id))
-              .setScale(0.24)
+              .staticSprite(x, y, 'garoa-npcs-v3', npcFrame(actor.id))
+              .setScale(0.3)
               .setDepth(8)
           : this.physics.add.staticSprite(x, y, 'garoa', 'banca_jornal').setScale(1.5).setDepth(8)
       sprite.setData('actionId', actor.id)
@@ -390,15 +395,15 @@ function directionFrame(direction: 'down' | 'left' | 'right' | 'up', step: numbe
 function npcFrame(actionId: string): number {
   const id = actionId.replace('talk:', '')
   const rows: Record<string, number> = {
-    ajudante: 4,
-    seu_jorge: 1,
-    dona_cida: 2,
-    yumi: 3,
-    tico: 4,
-    renan: 5,
-    val: 0,
+    ajudante: 0,
+    seu_jorge: 0,
+    dona_cida: 5,
+    yumi: 4,
+    tico: 3,
+    renan: 1,
+    val: 2,
   }
-  return (rows[id] ?? 4) * 12
+  return (rows[id] ?? 2) * 12
 }
 
 export function mountBackdrop(parent: string): WorldController {

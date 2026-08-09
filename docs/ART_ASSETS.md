@@ -15,7 +15,7 @@ garoa, paleta fria, sinalização, NPCs e objetos paulistanos autorais.
 O pack de dungeon da CraftPix foi usado apenas como referência de densidade e
 composição. Nenhum pixel desse pack foi incluído no repositório.
 
-## Personagens GAROA v2
+## Personagens GAROA v2 e NPCs v3
 
 A folha em `public/assets/garoa-characters-v2/characters-sheet.png` foi gerada
 especificamente para o projeto com a ferramenta de geração de imagens da OpenAI e
@@ -25,3 +25,9 @@ personagens ou arquivos do catálogo.
 
 Os seis desenhos representam Jaci, Seu Jorge, Dona Cida, Yumi, Tico e Renan em
 quatro direções e três quadros por direção.
+
+A folha v3 em `public/assets/garoa-characters-v3/characters-sheet.png` substitui
+os NPCs genéricos por seis silhuetas urbanas mais legíveis: trabalhador da
+construção, profissional de escritório, artista, entregador de bicicleta,
+estudante e trabalhadora da saúde. Ela também foi gerada especificamente para o
+GAROA, removida de fundo cromático e normalizada para a grade 12×6 de 128×170 px.
