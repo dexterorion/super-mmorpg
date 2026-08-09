@@ -10,13 +10,13 @@ export const districtsAct1 = {
   centro: {
     id: 'centro',
     name: 'Centro',
-    places: ['centro_republica', 'centro_anhangabau', 'centro_se'],
+    places: ['centro_republica', 'centro_anhangabau', 'centro_se', 'centro_copan', 'centro_ccsp'],
     connections: ['tiete', 'bixiga'],
   },
   bixiga: {
     id: 'bixiga',
     name: 'Bixiga',
-    places: ['bixiga_ladeira', 'bixiga_pensao_porta', 'bixiga_quarto'],
+    places: ['bixiga_ladeira', 'bixiga_pensao_porta', 'bixiga_quarto', 'bixiga_vai_vai'],
     connections: ['centro', 'liberdade'],
     unlockedBy: [{ kind: 'flag', id: 'knows_bixiga_route' }],
   },
@@ -29,8 +29,8 @@ export const districtsAct1 = {
   paulista: {
     id: 'paulista',
     name: 'Paulista',
-    places: ['paulista_horizonte'],
-    connections: ['liberdade', 'zona_leste'],
+    places: ['paulista_horizonte', 'paulista_masp'],
+    connections: ['liberdade', 'zona_leste', 'ibirapuera'],
   },
   zona_leste: {
     id: 'zona_leste',
@@ -43,6 +43,12 @@ export const districtsAct1 = {
     name: 'Minhocão',
     places: ['minhocao_domingo'],
     connections: ['zona_leste'],
+  },
+  ibirapuera: {
+    id: 'ibirapuera',
+    name: 'Ibirapuera',
+    places: ['ibirapuera_marquise'],
+    connections: ['paulista'],
   },
 } as const satisfies Readonly<Record<string, DistrictDef>>
 
@@ -104,6 +110,7 @@ export const placesAct1 = {
     exits: [
       { to: 'centro_anhangabau', label: 'Descer para o Anhangabaú' },
       { to: 'centro_se', label: 'Caminhar até a Sé' },
+      { to: 'centro_copan', label: 'Caminhar até o Copan' },
     ],
   },
   centro_anhangabau: {
@@ -124,6 +131,37 @@ export const placesAct1 = {
     exits: [
       { to: 'centro_republica', label: 'Voltar à República' },
       { to: 'centro_anhangabau', label: 'Voltar ao Anhangabaú' },
+      { to: 'centro_ccsp', label: 'Seguir até o Centro Cultural' },
+    ],
+  },
+  centro_copan: {
+    id: 'centro_copan',
+    district: 'centro',
+    name: 'Edifício Copan',
+    blurb: 'A curva de concreto ocupa a quadra; embaixo, a cidade entra e sai.',
+    exits: [{ to: 'centro_republica', label: 'Voltar à República' }],
+    actions: [
+      {
+        id: 'observar_copan',
+        label: 'Observar a fachada e o térreo',
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_copan' }],
+      },
+    ],
+  },
+  centro_ccsp: {
+    id: 'centro_ccsp',
+    district: 'centro',
+    name: 'Centro Cultural São Paulo',
+    blurb: 'Rampas abertas ligam biblioteca, jardins e salas de apresentação.',
+    exits: [{ to: 'centro_se', label: 'Voltar em direção à Sé' }],
+    actions: [
+      {
+        id: 'participar_oficina',
+        label: 'Entrar numa oficina aberta',
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_ccsp' }],
+      },
     ],
   },
   bixiga_ladeira: {
@@ -131,7 +169,10 @@ export const placesAct1 = {
     district: 'bixiga',
     name: 'Ladeira do Bixiga',
     station: true,
-    exits: [{ to: 'bixiga_pensao_porta', label: 'Procurar a pensão do endereço' }],
+    exits: [
+      { to: 'bixiga_pensao_porta', label: 'Procurar a pensão do endereço' },
+      { to: 'bixiga_vai_vai', label: 'Seguir o som da bateria' },
+    ],
   },
   bixiga_pensao_porta: {
     id: 'bixiga_pensao_porta',
@@ -159,6 +200,21 @@ export const placesAct1 = {
     onEnter: [{ dialogueId: 'dlg_bilhete_val' }],
     exits: [{ to: 'bixiga_pensao_porta', label: 'Descer para a portaria' }],
     actions: [{ id: 'dormir', label: 'Dormir', effects: [{ kind: 'sleep', quality: 'bed' }] }],
+  },
+  bixiga_vai_vai: {
+    id: 'bixiga_vai_vai',
+    district: 'bixiga',
+    name: 'Quadra da Vai-Vai',
+    blurb: 'O surdo marca o passo; o ensaio atravessa a rua e chama o bairro.',
+    exits: [{ to: 'bixiga_ladeira', label: 'Voltar à ladeira' }],
+    actions: [
+      {
+        id: 'acompanhar_ensaio',
+        label: 'Acompanhar o ensaio',
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_vai_vai' }],
+      },
+    ],
   },
   liberdade_estacao: {
     id: 'liberdade_estacao',
@@ -189,6 +245,22 @@ export const placesAct1 = {
     onEnter: [{ dialogueId: 'dlg_act3' }],
     exits: [],
   },
+  paulista_masp: {
+    id: 'paulista_masp',
+    district: 'paulista',
+    name: 'MASP',
+    blurb: 'O vão livre enquadra a avenida e guarda uma pausa sob o museu.',
+    station: true,
+    exits: [{ to: 'paulista_horizonte', label: 'Seguir pela Paulista' }],
+    actions: [
+      {
+        id: 'visitar_masp',
+        label: 'Visitar a exposição',
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_masp' }],
+      },
+    ],
+  },
   zona_leste_radial: {
     id: 'zona_leste_radial',
     district: 'zona_leste',
@@ -204,5 +276,21 @@ export const placesAct1 = {
     station: true,
     onEnter: [{ dialogueId: 'dlg_final' }],
     exits: [],
+  },
+  ibirapuera_marquise: {
+    id: 'ibirapuera_marquise',
+    district: 'ibirapuera',
+    name: 'Marquise do Ibirapuera',
+    blurb: 'Sob a marquise, rodas, passos e conversas dividem o mesmo abrigo.',
+    station: true,
+    exits: [],
+    actions: [
+      {
+        id: 'cruzar_marquise',
+        label: 'Cruzar a marquise com calma',
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_ibirapuera' }],
+      },
+    ],
   },
 } as const satisfies Readonly<Record<string, PlaceDef>>

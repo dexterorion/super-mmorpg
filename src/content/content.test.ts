@@ -132,6 +132,24 @@ describe('Act 1 content', () => {
     expect([...reachedDistricts].sort()).toEqual(Object.keys(content.districts).sort())
   })
 
+  it('gives every featured cultural place a meaningful interaction', () => {
+    const culturalPlaces = [
+      'centro_copan',
+      'centro_ccsp',
+      'bixiga_vai_vai',
+      'paulista_masp',
+      'ibirapuera_marquise',
+    ]
+    culturalPlaces.forEach((placeId) => {
+      const place = content.places[placeId]
+      expect(place, placeId).toBeDefined()
+      expect(
+        place!.actions?.some((action) => action.effects?.length),
+        placeId
+      ).toBe(true)
+    })
+  })
+
   it('makes every Desenrolo winnable before its turn limit', () => {
     for (const battle of Object.values(content.desenrolos)) {
       const turns = battle.turnLimit ?? 99

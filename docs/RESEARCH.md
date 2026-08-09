@@ -8,6 +8,8 @@ como contexto e parâmetros de jogo; GAROA não reproduz textos ou fotografias.
 - [Copan — Prefeitura de São Paulo](https://capital.sp.gov.br/w/noticia/prefeitura-concede-incentivo-inedito-da-lei-cidade-limpa-para-restauro-da-fachada-do-edificio-copan-1)
 - [MASP — instituição e edifício](https://www.masp.org.br/sobre/)
 - [Marquise do Ibirapuera](https://parqueibirapuera.org/areas-externas-do-parque-ibirapuera/marquise-do-parque-ibirapuera/)
+- [Centro Cultural São Paulo — site oficial](https://centrocultural.sp.gov.br/)
+- [Vai-Vai — site oficial](https://www.vaivai.com.br/)
 - [PIU Parque Minhocão — Prefeitura](https://gestaourbana.prefeitura.sp.gov.br/wp-content/uploads/2019/05/PIU_minhocao_apresentacao_cmtt.pdf)
 
 ## Mobilidade, moradia e economia

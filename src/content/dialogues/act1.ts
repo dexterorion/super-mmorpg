@@ -517,4 +517,119 @@ export const dialoguesAct1 = {
       },
     },
   },
+  dlg_copan: {
+    id: 'dlg_copan',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'A fachada curva parece dobrar o quarteirão sem separar quem passa.',
+          'No térreo, comércio e moradia dividem o mesmo endereço.',
+        ],
+        onEnter: [
+          { kind: 'savvyXp', amount: 4 },
+          {
+            kind: 'journal',
+            id: 'lugar_copan',
+            text: 'Copan: uma cidade vertical com vida também no térreo.',
+            entryKind: 'lesson',
+          },
+        ],
+        end: true,
+      },
+    },
+  },
+  dlg_ccsp: {
+    id: 'dlg_ccsp',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'A oficina começa com papel, fita e uma pergunta: “Que cidade cabe aqui?”',
+          'Sua resposta vira parte de um mapa coletivo na parede.',
+        ],
+        onEnter: [
+          { kind: 'affinity', affinity: 'gab', delta: 1 },
+          {
+            kind: 'journal',
+            id: 'lugar_ccsp',
+            text: 'No CCSP, participei de uma oficina e deixei meu traço no mapa.',
+            entryKind: 'lesson',
+          },
+        ],
+        end: true,
+      },
+    },
+  },
+  dlg_vai_vai: {
+    id: 'dlg_vai_vai',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'Uma ritmista percebe seu pé atrasado e mostra onde o compasso vira.',
+          'Na segunda passagem, você já consegue caminhar junto da bateria.',
+        ],
+        onEnter: [
+          { kind: 'energy', delta: 8 },
+          {
+            kind: 'journal',
+            id: 'lugar_vai_vai',
+            text: 'Na quadra da Vai-Vai, aprendi o compasso seguindo a bateria.',
+            entryKind: 'lesson',
+          },
+        ],
+        end: true,
+      },
+    },
+  },
+  dlg_masp: {
+    id: 'dlg_masp',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'Os quadros parecem suspensos, como se a sala recusasse uma ordem única.',
+          'Você escolhe o próprio caminho entre histórias distantes.',
+        ],
+        onEnter: [
+          { kind: 'savvyXp', amount: 6 },
+          {
+            kind: 'journal',
+            id: 'lugar_masp',
+            text: 'No MASP, percorri a exposição sem uma rota obrigatória.',
+            entryKind: 'lesson',
+          },
+        ],
+        end: true,
+      },
+    },
+  },
+  dlg_ibirapuera: {
+    id: 'dlg_ibirapuera',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'Skatistas, famílias e dançarinos inventam faixas invisíveis no concreto.',
+          'Você desacelera e atravessa sem cortar o caminho de ninguém.',
+        ],
+        onEnter: [
+          { kind: 'energy', delta: 10 },
+          {
+            kind: 'journal',
+            id: 'lugar_ibirapuera',
+            text: 'A Marquise do Ibirapuera é abrigo e passagem compartilhada.',
+            entryKind: 'lesson',
+          },
+        ],
+        end: true,
+      },
+    },
+  },
 } as const satisfies Readonly<Record<string, Dialogue>>
