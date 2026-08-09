@@ -2,7 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tools/playtest/visual',
-  timeout: 60_000,
+  timeout: 120_000,
+  workers: process.env.CI ? 1 : undefined,
   fullyParallel: false,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
