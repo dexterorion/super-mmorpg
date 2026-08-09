@@ -78,6 +78,10 @@ const MIGRATIONS: Readonly<Record<number, Migration>> = {
     player: { ...(raw.player as object), preferredTravelMode: 'metro' },
   }),
   5: (raw) => ({ ...raw, education: null }),
+  6: (raw) => ({
+    ...raw,
+    family: { partnership: null, childrenDecision: 'undecided', children: [] },
+  }),
 }
 
 export function serialize(state: GameState, now: number): string {
@@ -254,6 +258,7 @@ function isGameState(value: unknown): value is GameState {
     ) &&
     recordValues(value.relationships, (entry) => typeof entry === 'number') &&
     (value.education === null || isEducationEnrollment(value.education)) &&
+    isFamily(value.family) &&
     strings(value.seenNodes) &&
     strings(value.clearedDesenrolos) &&
     typeof value.elapsedMinutes === 'number'
@@ -272,6 +277,33 @@ function isEducationEnrollment(value: unknown): boolean {
     ]) &&
     isOneOf(value.status, ['active', 'completed']) &&
     numbers(value, ['enrolledOnDay', 'lastProgressDay', 'completedMonths'])
+  )
+}
+
+function isFamily(value: unknown): boolean {
+  if (!isRecord(value) || !isOneOf(value.childrenDecision, ['undecided', 'yes', 'no'])) return false
+  if (!arrayValues(value.children, isChild)) return false
+  if (value.partnership === null) return true
+  if (!isRecord(value.partnership)) return false
+  return (
+    typeof value.partnership.partnerNpcId === 'string' &&
+    isOneOf(value.partnership.status, ['partnered', 'married']) &&
+    typeof value.partnership.startedOnDay === 'number' &&
+    (value.partnership.marriedOnDay === null ||
+      typeof value.partnership.marriedOnDay === 'number') &&
+    typeof value.partnership.partnerCareShare === 'number' &&
+    value.partnership.partnerCareShare >= 0 &&
+    value.partnership.partnerCareShare <= 1
+  )
+}
+
+function isChild(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.name === 'string' &&
+    isOneOf(value.age, ['baby', 'child', 'teen']) &&
+    typeof value.joinedOnDay === 'number'
   )
 }
 
