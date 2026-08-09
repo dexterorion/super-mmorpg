@@ -1,0 +1,26 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.log
+npm-debug.log*
+
+# Generated art (rebuilt deterministically by `npm run art:build`)
+public/atlas.png
+public/atlas.json
+
+# Playtest / e2e output
+playtest-report/
+playwright-report/
+test-results/
+.playtest-cache/
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Env
+.env
+.env.*
+!.env.example

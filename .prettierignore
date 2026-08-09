@@ -1,0 +1,9 @@
+dist
+coverage
+node_modules
+playtest-report
+playwright-report
+test-results
+public/atlas.png
+public/atlas.json
+package-lock.json
