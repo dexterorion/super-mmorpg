@@ -42,5 +42,19 @@ Também explicita os limites da política municipal: acesso universal, sem
 proselitismo como condição, e voluntariado sem substituir profissionais do SUAS.
 A escolha de procurar diretamente a rede pública recebe o mesmo respeito.
 
+## Educação e territórios culturais
+
+- [Secretaria Municipal de Educação — Coordenadoria dos CEUs](https://educacao.sme.prefeitura.sp.gov.br/coceu/)
+- [Prefeitura — unidades dos CEUs e CEU Aricanduva](https://ceu.sme.prefeitura.sp.gov.br/unidades-ceus/)
+- [Sesc São Paulo — apresentação institucional](https://portal.sescsp.org.br/pt/sobre-o-sesc/quem-somos/apresentacao/)
+- [Centro de Pesquisa e Formação do Sesc SP](https://centrodepesquisaeformacao.sescsp.org.br/?o=homeportal)
+- [Participe+ São Paulo — proposta de CDRU da Ouvidor 63](https://participemais.prefeitura.sp.gov.br/system/documents/attachments/000/003/878/original/d4f84779cd52fbe5c1bcdb0581cd9a036ea14e80.pdf)
+
+O CEU aparece como equipamento público que articula educação, cultura e
+proteção territorial. O Sesc é descrito como instituição privada de educação não
+formal, sem prometer emprego ou acesso universal a toda atividade. Na Ouvidor 63,
+o documento hospedado pela Prefeitura é tratado como proposta em debate, não como
+prova de regularização, posse definitiva ou consenso sobre a ocupação.
+
 Eventos inspirados em fatos terão data e fonte dentro do Caderninho. Pessoas e
 empresas fictícias não serão apresentadas como participantes de casos reais.

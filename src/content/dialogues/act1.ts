@@ -731,4 +731,164 @@ export const dialoguesAct1 = {
       },
     },
   },
+  dlg_ceu_aricanduva: {
+    id: 'dlg_ceu_aricanduva',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'A oficina junta estudantes e moradores em torno de um mapa do bairro.',
+          'A educadora lembra que o CEU articula escola, cultura, esporte e participação.',
+        ],
+        choices: [
+          {
+            id: 'mapear_saberes',
+            text: 'Registrar saberes e oportunidades de formação do território.',
+            effects: [
+              { kind: 'flag', id: 'education:ceu_territory_map', value: true },
+              { kind: 'savvyXp', amount: 8 },
+              {
+                kind: 'journal',
+                id: 'place_ceu_aricanduva',
+                text: 'Mapeei formação e cultura no CEU Aricanduva. Fonte: educacao.sme.prefeitura.sp.gov.br/coceu.',
+                entryKind: 'lesson',
+                source: {
+                  label: 'Secretaria Municipal de Educação · COCEU',
+                  url: 'https://educacao.sme.prefeitura.sp.gov.br/coceu/',
+                },
+              },
+            ],
+            exit: true,
+          },
+          {
+            id: 'rede_protecao_ceu',
+            text: 'Conectar a oficina à rede de proteção social do bairro.',
+            effects: [
+              { kind: 'flag', id: 'network:ceu_social_protection', value: true },
+              { kind: 'affinity', affinity: 'gab', delta: 1 },
+              {
+                kind: 'journal',
+                id: 'network_ceu_aricanduva',
+                text: 'Conectei educação e proteção social no CEU. Fonte: educacao.sme.prefeitura.sp.gov.br/coceu.',
+                entryKind: 'contact',
+                source: {
+                  label: 'Secretaria Municipal de Educação · COCEU',
+                  url: 'https://educacao.sme.prefeitura.sp.gov.br/coceu/',
+                },
+              },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_sesc_formacao: {
+    id: 'dlg_sesc_formacao',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'Uma produtora explica como transformar uma ideia em atividade cultural acessível.',
+          'A formação é educação não formal; participar não garante contrato ou credencial.',
+        ],
+        choices: [
+          {
+            id: 'propor_atividade_sesc',
+            text: 'Preparar uma proposta e entrar na rede de produção cultural.',
+            effects: [
+              { kind: 'flag', id: 'work:cultural_proposal', value: true },
+              { kind: 'money', delta: 2_500 },
+              { kind: 'affinity', affinity: 'gab', delta: 1 },
+              {
+                kind: 'journal',
+                id: 'work_sesc_formation',
+                text: 'Preparei uma proposta cultural; a ajuda de custo não garante emprego. Fonte: sescsp.org.br.',
+                entryKind: 'contact',
+                source: {
+                  label: 'Sesc São Paulo · Quem somos',
+                  url: 'https://portal.sescsp.org.br/pt/sobre-o-sesc/quem-somos/apresentacao/',
+                },
+              },
+            ],
+            exit: true,
+          },
+          {
+            id: 'estudar_gestao_cultural',
+            text: 'Usar a formação para aprofundar gestão e mediação cultural.',
+            effects: [
+              { kind: 'flag', id: 'education:cultural_management', value: true },
+              { kind: 'savvyXp', amount: 10 },
+              {
+                kind: 'journal',
+                id: 'education_sesc_formation',
+                text: 'Estudei gestão cultural no Sesc. Fonte: Centro de Pesquisa e Formação Sesc SP.',
+                entryKind: 'lesson',
+                source: {
+                  label: 'Centro de Pesquisa e Formação · Sesc SP',
+                  url: 'https://centrodepesquisaeformacao.sescsp.org.br/?o=homeportal',
+                },
+              },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
+  dlg_ocupacao_ouvidor: {
+    id: 'dlg_ocupacao_ouvidor',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        lines: [
+          'A assembleia apresenta ateliês, eventos e as regras coletivas de uso do edifício.',
+          'A proposta de permanência está em debate público; visita não resolve a disputa urbana.',
+        ],
+        choices: [
+          {
+            id: 'rede_artistas_ouvidor',
+            text: 'Oferecer trabalho numa mostra e conhecer a rede de artistas.',
+            effects: [
+              { kind: 'flag', id: 'network:ouvidor_artists', value: true },
+              { kind: 'affinity', affinity: 'gab', delta: 1 },
+              {
+                kind: 'journal',
+                id: 'network_ouvidor_63',
+                text: 'Entrei numa rede de artistas da Ouvidor 63 sem presumir o desfecho da disputa.',
+                entryKind: 'contact',
+                source: {
+                  label: 'Participe+ São Paulo · proposta CDRU Ouvidor 63',
+                  url: 'https://participemais.prefeitura.sp.gov.br/system/documents/attachments/000/003/878/original/d4f84779cd52fbe5c1bcdb0581cd9a036ea14e80.pdf',
+                },
+              },
+            ],
+            exit: true,
+          },
+          {
+            id: 'documentar_debate_ouvidor',
+            text: 'Documentar argumentos e levar o debate ao Caderninho.',
+            effects: [
+              { kind: 'flag', id: 'education:ouvidor_urban_debate', value: true },
+              { kind: 'savvyXp', amount: 8 },
+              {
+                kind: 'journal',
+                id: 'lesson_ouvidor_63',
+                text: 'Registrei a proposta cultural e a disputa urbana da Ouvidor 63 sem tomar posse como fato.',
+                entryKind: 'lesson',
+                source: {
+                  label: 'Participe+ São Paulo · proposta CDRU Ouvidor 63',
+                  url: 'https://participemais.prefeitura.sp.gov.br/system/documents/attachments/000/003/878/original/d4f84779cd52fbe5c1bcdb0581cd9a036ea14e80.pdf',
+                },
+              },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
 } as const satisfies Readonly<Record<string, Dialogue>>

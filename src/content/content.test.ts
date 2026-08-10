@@ -61,6 +61,48 @@ describe('Act 1 content', () => {
     ).toBe(false)
   })
 
+  it.each([
+    [
+      'centro_sesc_24_maio',
+      'do:formacao_sesc',
+      'choice:propor_atividade_sesc',
+      'work:cultural_proposal',
+    ],
+    [
+      'centro_ocupacao_ouvidor',
+      'do:assembleia_ouvidor',
+      'choice:rede_artistas_ouvidor',
+      'network:ouvidor_artists',
+    ],
+    [
+      'zona_leste_ceu_aricanduva',
+      'do:oficina_ceu',
+      'choice:mapear_saberes',
+      'education:ceu_territory_map',
+    ],
+  ] as const)(
+    'makes %s reachable, consequential and sourced',
+    (place, placeAction, choice, flag) => {
+      const session = new GameSession(content)
+      const initial = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 9 })
+      let state: GameState = {
+        ...initial,
+        district: content.places[place]!.district,
+        place,
+        mode: { kind: 'world' },
+      }
+      expect(session.availableActions(state).some((action) => action.id === placeAction)).toBe(true)
+      state = session.performById(state, placeAction).state
+      state = session.performById(state, 'advance').state
+      state = session.performById(state, choice).state
+      expect(state.flags[flag]).toBe(true)
+      expect(state.journal.at(-1)?.source?.url).toMatch(/^https:\/\//)
+      expect(session.availableActions(state).some((action) => action.id === placeAction)).toBe(
+        false
+      )
+    }
+  )
+
   it('matches every runtime schema', () => {
     Object.values(content.dialogues).forEach((value) =>
       expect(() => dialogueSchema.parse(value)).not.toThrow()

@@ -10,7 +10,15 @@ export const districtsAct1 = {
   centro: {
     id: 'centro',
     name: 'Centro',
-    places: ['centro_republica', 'centro_anhangabau', 'centro_se', 'centro_copan', 'centro_ccsp'],
+    places: [
+      'centro_republica',
+      'centro_anhangabau',
+      'centro_se',
+      'centro_copan',
+      'centro_ccsp',
+      'centro_sesc_24_maio',
+      'centro_ocupacao_ouvidor',
+    ],
     connections: ['tiete', 'bixiga'],
   },
   bixiga: {
@@ -35,7 +43,7 @@ export const districtsAct1 = {
   zona_leste: {
     id: 'zona_leste',
     name: 'Zona Leste',
-    places: ['zona_leste_radial'],
+    places: ['zona_leste_radial', 'zona_leste_ceu_aricanduva'],
     connections: ['paulista', 'minhocao'],
   },
   minhocao: {
@@ -111,6 +119,8 @@ export const placesAct1 = {
       { to: 'centro_anhangabau', label: 'Descer para o Anhangabaú' },
       { to: 'centro_se', label: 'Caminhar até a Sé' },
       { to: 'centro_copan', label: 'Caminhar até o Copan' },
+      { to: 'centro_sesc_24_maio', label: 'Ir ao Sesc 24 de Maio' },
+      { to: 'centro_ocupacao_ouvidor', label: 'Seguir até a Ouvidor 63' },
     ],
   },
   centro_anhangabau: {
@@ -170,6 +180,38 @@ export const placesAct1 = {
         label: 'Entrar numa oficina aberta',
         once: true,
         effects: [{ kind: 'startDialogue', id: 'dlg_ccsp' }],
+      },
+    ],
+  },
+  centro_sesc_24_maio: {
+    id: 'centro_sesc_24_maio',
+    district: 'centro',
+    name: 'Sesc 24 de Maio',
+    blurb: 'O prédio mistura convivência, formação, trabalho cultural e cidade.',
+    exits: [{ to: 'centro_republica', label: 'Voltar à República' }],
+    actions: [
+      {
+        id: 'formacao_sesc',
+        label: 'Participar de uma formação cultural',
+        once: true,
+        energyCost: 5,
+        effects: [{ kind: 'startDialogue', id: 'dlg_sesc_formacao' }],
+      },
+    ],
+  },
+  centro_ocupacao_ouvidor: {
+    id: 'centro_ocupacao_ouvidor',
+    district: 'centro',
+    name: 'Ocupação Cultural Ouvidor 63',
+    blurb: 'Ateliês e espaços coletivos disputam permanência no Centro.',
+    exits: [{ to: 'centro_republica', label: 'Voltar à República' }],
+    actions: [
+      {
+        id: 'assembleia_ouvidor',
+        label: 'Conhecer uma assembleia cultural aberta',
+        once: true,
+        energyCost: 4,
+        effects: [{ kind: 'startDialogue', id: 'dlg_ocupacao_ouvidor' }],
       },
     ],
   },
@@ -295,7 +337,23 @@ export const placesAct1 = {
         ],
       },
     ],
-    exits: [],
+    exits: [{ to: 'zona_leste_ceu_aricanduva', label: 'Seguir até o CEU Aricanduva' }],
+  },
+  zona_leste_ceu_aricanduva: {
+    id: 'zona_leste_ceu_aricanduva',
+    district: 'zona_leste',
+    name: 'CEU Aricanduva',
+    blurb: 'Biblioteca, formação, esporte e cultura compartilham o equipamento público.',
+    exits: [{ to: 'zona_leste_radial', label: 'Voltar à Radial Leste' }],
+    actions: [
+      {
+        id: 'oficina_ceu',
+        label: 'Entrar numa oficina do CEU',
+        once: true,
+        energyCost: 4,
+        effects: [{ kind: 'startDialogue', id: 'dlg_ceu_aricanduva' }],
+      },
+    ],
   },
   minhocao_domingo: {
     id: 'minhocao_domingo',
