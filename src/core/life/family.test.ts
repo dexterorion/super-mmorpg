@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../state/state.js'
 import {
+  advanceFamily,
   assessFamilyImpact,
   beginPartnership,
   decideChildren,
+  endPartnership,
   marryPartner,
   welcomeChild,
 } from './family.js'
@@ -24,6 +26,28 @@ describe('partnership, marriage and children', () => {
     expect(parent.family.children).toEqual([
       { id: 'luz', name: 'Luz', age: 'baby', joinedOnDay: 30 },
     ])
+  })
+
+  it('ages children as metropolitan life advances and preserves their identity', () => {
+    const initial = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 1 })
+    const parent = welcomeChild(decideChildren(initial, 'yes'), { id: 'luz', name: 'Luz' })
+    expect(
+      advanceFamily({ ...parent, clock: { ...parent.clock, day: 31 } }).family.children
+    ).toEqual([expect.objectContaining({ id: 'luz', name: 'Luz', age: 'child' })])
+    expect(
+      advanceFamily({ ...parent, clock: { ...parent.clock, day: 181 } }).family.children
+    ).toEqual([expect.objectContaining({ id: 'luz', age: 'teen' })])
+  })
+
+  it('ends a partnership without removing children or their history', () => {
+    const initial = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 1 })
+    const parent = welcomeChild(decideChildren(beginPartnership(initial, 'yumi'), 'yes'), {
+      id: 'luz',
+      name: 'Luz',
+    })
+    const separated = endPartnership(parent)
+    expect(separated.family.partnership).toBeNull()
+    expect(separated.family.children).toEqual(parent.family.children)
   })
 
   it('respects the decision not to have children', () => {

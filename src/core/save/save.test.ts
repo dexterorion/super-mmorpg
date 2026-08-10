@@ -101,6 +101,23 @@ describe('serialize / deserialize', () => {
     expect(result.state.flags['family:care:42']).toBe(true)
   })
 
+  it('persists an aged child and separation history without restoring the former partner', () => {
+    const separated = {
+      ...state,
+      flags: { 'family:separated:yumi:200': true },
+      family: {
+        partnership: null,
+        childrenDecision: 'yes' as const,
+        children: [{ id: 'luz', name: 'Luz', age: 'teen' as const, joinedOnDay: 20 }],
+      },
+    }
+    const result = deserialize(serialize(separated, 1000))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.family).toEqual(separated.family)
+    expect(result.state.flags['family:separated:yumi:200']).toBe(true)
+  })
+
   it('migrates a v2 archetype save to the housing model', () => {
     const oldState = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
     const oldPlayer = oldState.player as Record<string, unknown>

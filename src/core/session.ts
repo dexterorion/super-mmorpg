@@ -37,9 +37,11 @@ import {
   type AgendaActivity,
 } from './life/calendar.js'
 import {
+  advanceFamily,
   assessFamilyImpact,
   beginPartnership,
   decideChildren,
+  endPartnership,
   marryPartner,
   welcomeChild,
   type ChildrenDecision,
@@ -83,6 +85,7 @@ export type Action =
       readonly decision:
         | { readonly kind: 'beginPartnership'; readonly partnerNpcId: NpcId }
         | { readonly kind: 'marry' }
+        | { readonly kind: 'separate' }
         | { readonly kind: 'decideChildren'; readonly value: ChildrenDecision }
         | { readonly kind: 'welcomeChild' }
         | { readonly kind: 'careDay' }
@@ -139,7 +142,7 @@ export class GameSession {
 
   /** Reconciles a freshly created or loaded state before either driver renders it. */
   begin(state: GameState): PerformResult {
-    return { state: this.reconcile(advanceEducation(state), true), events: [] }
+    return { state: this.reconcile(advanceFamily(advanceEducation(state)), true), events: [] }
   }
 
   // --- Lookups (bound so they can be passed as ports) -------------------
@@ -304,6 +307,15 @@ export class GameSession {
         group: 'life',
       })
     }
+
+    actions.push({
+      id: 'family:separate',
+      label: `Encerrar ${partnership.status === 'married' ? 'o casamento' : 'a parceria'} · 3h`,
+      action: { kind: 'family', decision: { kind: 'separate' } },
+      enabled: state.player.energy >= 4,
+      ...(state.player.energy >= 4 ? {} : { lockedReason: 'sem disposição' }),
+      group: 'life',
+    })
 
     if (state.family.childrenDecision === 'undecided') {
       for (const value of ['yes', 'no'] as const) {
@@ -532,8 +544,8 @@ export class GameSession {
       ...result.state,
       elapsedMinutes: result.state.elapsedMinutes + SECONDS_PER_ACTION[action.kind] / 60,
     }
-    const withEducation = advanceEducation(withTime)
-    const reconciled = this.reconcile(withEducation, result.state.place !== state.place)
+    const withLifeProgress = advanceFamily(advanceEducation(withTime))
+    const reconciled = this.reconcile(withLifeProgress, result.state.place !== state.place)
     const conjuncture = applyDueConjuncture(reconciled)
     return { state: conjuncture.state, events: [...result.events, ...conjuncture.events] }
   }
@@ -686,6 +698,17 @@ export class GameSession {
         const next = advanceMinutes(spendEnergy(withMoney(married, -60_000), 8), 360)
         return { state: next, events: [{ type: 'familyMarriage' }] }
       }
+      case 'separate': {
+        const partner = state.family.partnership
+        if (!partner) return { state, events: [] }
+        let next = endPartnership(state)
+        next = withFlag(next, `family:separated:${partner.partnerNpcId}:${state.clock.day}`, true)
+        next = advanceMinutes(spendEnergy(next, 4), 180)
+        return {
+          state: next,
+          events: [{ type: 'familySeparation', partnerNpcId: partner.partnerNpcId }],
+        }
+      }
       case 'decideChildren':
         return {
           state: advanceMinutes(decideChildren(state, decision.value), 60),
@@ -781,6 +804,7 @@ export class GameSession {
         journal: next.journal,
       }
       next = advanceEducation(next)
+      next = advanceFamily(next)
     }
 
     return next

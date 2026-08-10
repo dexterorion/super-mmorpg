@@ -100,6 +100,11 @@ export function marryPartner(state: GameState): GameState {
   }
 }
 
+export function endPartnership(state: GameState): GameState {
+  if (!state.family.partnership) return state
+  return { ...state, family: { ...state.family, partnership: null } }
+}
+
 export function decideChildren(state: GameState, decision: ChildrenDecision): GameState {
   return { ...state, family: { ...state.family, childrenDecision: decision } }
 }
@@ -123,6 +128,19 @@ export function welcomeChild(
       ],
     },
   }
+}
+
+/** GAROA compresses life stages so they remain visible inside a 365-day playthrough. */
+export function advanceFamily(state: GameState): GameState {
+  let changed = false
+  const children = state.family.children.map((child) => {
+    const daysTogether = Math.max(0, state.clock.day - child.joinedOnDay)
+    const age: ChildAge = daysTogether >= 180 ? 'teen' : daysTogether >= 30 ? 'child' : 'baby'
+    if (age === child.age) return child
+    changed = true
+    return { ...child, age }
+  })
+  return changed ? { ...state, family: { ...state.family, children } } : state
 }
 
 export function assessFamilyImpact(context: FamilyContext): FamilyImpact {

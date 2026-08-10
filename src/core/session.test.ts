@@ -419,6 +419,36 @@ describe('GameSession actions', () => {
     expect(session.performById(partnered, 'family:marry').state).toBe(partnered)
   })
 
+  it('makes separation reconfigure care and persists its consequence as history', () => {
+    const session = new GameSession(playableContent())
+    const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
+    const parent = {
+      ...base,
+      place: 'a',
+      family: {
+        partnership: {
+          partnerNpcId: 'bia',
+          status: 'married' as const,
+          startedOnDay: 1,
+          marriedOnDay: 31,
+          partnerCareShare: 0.5,
+        },
+        childrenDecision: 'yes' as const,
+        children: [{ id: 'luz', name: 'Luz', age: 'baby' as const, joinedOnDay: 1 }],
+      },
+    }
+    const before = session.familyImpact(parent)
+    const result = session.performById(parent, 'family:separate')
+    const after = session.familyImpact(result.state)
+
+    expect(result.events).toContainEqual({ type: 'familySeparation', partnerNpcId: 'bia' })
+    expect(result.state.family.partnership).toBeNull()
+    expect(result.state.family.children).toHaveLength(1)
+    expect(result.state.flags['family:separated:bia:1']).toBe(true)
+    expect(after.weeklyCareHours).toBeGreaterThan(before.weeklyCareHours)
+    expect(after.monthlyCareCost).toBeGreaterThan(before.monthlyCareCost)
+  })
+
   it('reconciles an effect-started battle and exposes its phases', () => {
     const session = new GameSession(playableContent())
     const base = createInitialState({ name: 'Zé', hometown: 'bauru', seed: 7 })
