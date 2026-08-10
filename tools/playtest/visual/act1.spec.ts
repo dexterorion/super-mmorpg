@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { expect, test, type Page } from '@playwright/test'
+import { checksum } from '../../../src/core/save/codec.js'
 
 const reportDirectory = 'playtest-report/screenshots'
 async function shot(page: Page, name: string): Promise<void> {
@@ -7,7 +8,35 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${reportDirectory}/${name}.png`, fullPage: true })
 }
 async function action(page: Page, id: string): Promise<void> {
-  await page.locator(`[data-action="${id}"]`).evaluate((element: HTMLElement) => element.click())
+  const target = page.locator(`[data-action="${id}"]`)
+  await expect(target, `Expected action ${id}`).toBeAttached({ timeout: 5_000 })
+  await target.evaluate((element: HTMLElement) => element.click())
+}
+
+async function resolveBattle(page: Page): Promise<void> {
+  await action(page, 'battle:begin')
+  const used = new Set<string>()
+  for (let turn = 0; turn < 30; turn += 1) {
+    if (await page.locator('[data-action="battle:ack"]').count()) {
+      await action(page, 'battle:ack')
+      return
+    }
+    const enabled = await page
+      .locator('[data-action^="battle:"]:not([disabled])')
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-action') ?? ''))
+    if (enabled.includes('battle:observe')) {
+      await action(page, 'battle:observe')
+      continue
+    }
+    const argument = enabled.find((id) => id.startsWith('battle:argue:') && !used.has(id))
+    if (argument) {
+      used.add(argument)
+      await action(page, argument)
+      continue
+    }
+    await action(page, 'battle:insist')
+  }
+  throw new Error('Battle exceeded 30 turns')
 }
 
 test('Act 1 visual route, keyboard, save and reload', async ({ page, browserName }) => {
@@ -170,10 +199,76 @@ test('complete five-act campaign through the real UI', async ({ page, browserNam
   throw new Error('Complete browser campaign exceeded 180 actions')
 })
 
+test('build a family and make care visible through the real UI', async ({ page, browserName }) => {
+  test.setTimeout(180_000)
+  test.skip(browserName !== 'chromium', 'The canonical family route is captured in Chromium.')
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Novo jogo' }).click()
+  await page.getByRole('button', { name: /Faria-limer/ }).click()
+  await page.getByRole('button', { name: /Quarto em pensão/ }).click()
+  await action(page, 'advance')
+  await action(page, 'advance')
+  await action(page, 'choice:prudente')
+  await action(page, 'walk:tiete_saguao')
+  await action(page, 'advance')
+  await action(page, 'choice:reclamar')
+  await resolveBattle(page)
+  await action(page, 'walk:tiete_metro')
+  await action(page, 'do:comprar_bilhete')
+  await action(page, 'travel:centro')
+  await action(page, 'walk:centro_anhangabau')
+  await action(page, 'talk:seu_jorge')
+  await action(page, 'choice:comprar')
+  await action(page, 'do:cafe_com_jorge')
+  await action(page, 'advance')
+  await action(page, 'advance')
+  await action(page, 'choice:construir_juntos')
+
+  await page.getByRole('button', { name: 'Caderninho' }).click()
+  await expect(page.getByText(/afeto, aluguel, deslocamento/)).toBeVisible()
+  await action(page, 'family:partner:seu_jorge')
+  await expect(page.getByText(/Parceria com Seu Jorge/)).toBeVisible()
+  await expect(page.locator('[data-action="family:marry"]')).toBeDisabled()
+  await page.locator('[data-slot="1"]').click()
+  const serialized = await page.evaluate(() => localStorage.getItem('garoa.save.1'))
+  expect(serialized).not.toBeNull()
+  const agedSave = JSON.parse(serialized!) as {
+    state: { clock: { day: number } }
+    checksum: string
+  }
+  // Skip 30 identical sleep clicks while preserving the real save/load boundary.
+  agedSave.state.clock.day += 30
+  agedSave.checksum = checksum(JSON.stringify(agedSave.state))
+  await page.evaluate(({ key, value }) => localStorage.setItem(key, value), {
+    key: 'garoa.save.1',
+    value: JSON.stringify(agedSave),
+  })
+  await page.reload()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: 'Caderninho' }).click()
+  await action(page, 'family:marry')
+  await action(page, 'family:children:yes')
+  await action(page, 'family:welcome-child')
+  await expect(page.getByText(/Luz · baby/)).toBeVisible()
+  await expect(page.getByText(/Cuidado: R\$/)).toBeVisible()
+  const moneyBeforeCare = await page.locator('.hud').textContent()
+  await action(page, 'family:care-day')
+  await expect(page.locator('[data-action="family:care-day"]')).toHaveCount(0)
+  await expect(page.locator('.hud')).not.toHaveText(moneyBeforeCare ?? '')
+  await page.locator('[data-slot="2"]').click()
+  await shot(page, '04b-family')
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Continuar' }).click()
+  await page.getByRole('button', { name: 'Caderninho' }).click()
+  await expect(page.getByText(/Casamento com Seu Jorge/)).toBeVisible()
+  await expect(page.getByText(/Luz · baby/)).toBeVisible()
+})
+
 test.afterAll(async () => {
   await mkdir('playtest-report', { recursive: true })
   await writeFile(
     'playtest-report/index.html',
-    '<!doctype html><meta charset="utf-8"><title>GAROA playtest</title><style>body{background:#101923;color:#f0eadb;font:16px monospace}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px}img{width:100%;border:3px solid #f0eadb}</style><h1>GAROA — visual playtest</h1><main><img src="screenshots/01-title.png"><img src="screenshots/02-arrival.png"><img src="screenshots/02b-exploration.png"><img src="screenshots/02c-npc.png"><img src="screenshots/03-desenrolo.png"><img src="screenshots/04-caderninho.png"><img src="screenshots/05-reparticao.png"><img src="screenshots/06-entrevista.png"><img src="screenshots/07-enchente.png"><img src="screenshots/08-minhocao.png"><img src="screenshots/09-ending.png"></main>'
+    '<!doctype html><meta charset="utf-8"><title>GAROA playtest</title><style>body{background:#101923;color:#f0eadb;font:16px monospace}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px}img{width:100%;border:3px solid #f0eadb}</style><h1>GAROA — visual playtest</h1><main><img src="screenshots/01-title.png"><img src="screenshots/02-arrival.png"><img src="screenshots/02b-exploration.png"><img src="screenshots/02c-npc.png"><img src="screenshots/03-desenrolo.png"><img src="screenshots/04-caderninho.png"><img src="screenshots/04b-family.png"><img src="screenshots/05-reparticao.png"><img src="screenshots/06-entrevista.png"><img src="screenshots/07-enchente.png"><img src="screenshots/08-minhocao.png"><img src="screenshots/09-ending.png"></main>'
   )
 })

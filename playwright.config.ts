@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const port = process.env.PLAYWRIGHT_PORT ?? '4173'
+const baseURL = `http://127.0.0.1:${port}`
+
 export default defineConfig({
   testDir: './tools/playtest/visual',
   timeout: 120_000,
@@ -7,7 +10,7 @@ export default defineConfig({
   fullyParallel: false,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -22,8 +25,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run art:build && npm run dev -- --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173',
+    command: `npm run art:build && npm run dev -- --host 127.0.0.1 --port ${port}`,
+    url: baseURL,
     reuseExistingServer: true,
     timeout: 120_000,
   },

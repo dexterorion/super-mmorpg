@@ -122,6 +122,15 @@ export const placesAct1 = {
       { to: 'centro_se', label: 'Seguir para a Sé' },
     ],
     npcs: [{ npcId: 'seu_jorge', dialogueId: 'dlg_jorge_1', label: 'Falar com Seu Jorge' }],
+    actions: [
+      {
+        id: 'cafe_com_jorge',
+        label: 'Tomar um café com Seu Jorge',
+        conditions: [{ kind: 'relationship', npc: 'seu_jorge', min: 2 }],
+        once: true,
+        effects: [{ kind: 'startDialogue', id: 'dlg_jorge_cafe' }],
+      },
+    ],
   },
   centro_se: {
     id: 'centro_se',

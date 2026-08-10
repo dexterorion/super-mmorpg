@@ -155,6 +155,50 @@ export const dialoguesAct1 = {
       },
     },
   },
+  dlg_jorge_cafe: {
+    id: 'dlg_jorge_cafe',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'seu_jorge',
+        lines: [
+          'Seu Jorge fecha a caixa de cabos por alguns minutos e divide um café no balcão.',
+          '“Gostar é fácil. Difícil é caber aluguel, trabalho e duas rotinas no mesmo mapa.”',
+          'Vocês comparam o tempo no transporte e quem cuidaria da casa nos dias ruins.',
+        ],
+        choices: [
+          {
+            id: 'construir_juntos',
+            text: 'Quero descobrir se a gente consegue construir isso junto.',
+            effects: [
+              { kind: 'relationship', npc: 'seu_jorge', delta: 1 },
+              {
+                kind: 'journal',
+                id: 'family_jorge_cafe',
+                text: 'Com Seu Jorge, conversei sobre afeto, aluguel, deslocamento e divisão do cuidado.',
+                entryKind: 'contact',
+              },
+            ],
+            exit: true,
+          },
+          {
+            id: 'amizade_jorge',
+            text: 'Prefiro que nossa proximidade continue amizade.',
+            effects: [
+              {
+                kind: 'journal',
+                id: 'family_jorge_friendship',
+                text: 'Conversei com Seu Jorge e escolhemos preservar nossa amizade.',
+                entryKind: 'contact',
+              },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
   dlg_cida_1: {
     id: 'dlg_cida_1',
     start: 'start',
