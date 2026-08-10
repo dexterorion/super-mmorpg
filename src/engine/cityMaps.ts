@@ -213,7 +213,7 @@ const layouts: Readonly<Record<CityMapId, CityMap>> = {
       tile(6, 10, 6, 12, 3),
       tile(17, 10, 8, 12, 3),
     ],
-    collisions: [{ x: 0, y: 4, width: 24, height: 1 }],
+    collisions: [{ x: 0, y: 0, width: 24, height: 3 }],
   },
   ibirapuera: {
     id: 'ibirapuera',

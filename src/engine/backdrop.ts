@@ -64,6 +64,9 @@ export class WorldScene extends Phaser.Scene {
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
     this.load.image('centro-anhangabau', 'assets/garoa-city/centro-anhangabau.png')
+    this.load.image('tiete-slice', 'assets/garoa-city/tiete.png')
+    this.load.image('minhocao-slice', 'assets/garoa-city/minhocao.png')
+    this.load.image('paulista-slice', 'assets/garoa-city/paulista.png')
     this.load.spritesheet('garoa-player', 'assets/garoa-characters-v2/characters-sheet.png', {
       frameWidth: 128,
       frameHeight: 170,
@@ -353,10 +356,9 @@ function drawMap(
   placeId: string,
   map: ReturnType<typeof cityMapFor>
 ): void {
-  if (map.id === 'centro') {
-    scene.add
-      .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'centro-anhangabau')
-      .setDepth(0)
+  const backdrop = cityBackdropKey(map.id)
+  if (backdrop) {
+    scene.add.image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, backdrop).setDepth(0)
   } else {
     for (const entry of map.tiles)
       scene.add
@@ -371,10 +373,10 @@ function drawMap(
       MAP_WIDTH * TILE,
       MAP_HEIGHT * TILE,
       palette.void,
-      map.id === 'centro' ? 0.1 : 0.3
+      backdrop ? 0.1 : 0.3
     )
     .setDepth(1)
-  if (map.id !== 'centro') drawLandmark(scene, map)
+  if (!backdrop) drawLandmark(scene, map)
   drawUrbanDepth(scene, map)
   const rain = scene.add.graphics().setDepth(12)
   rain.lineStyle(1, 0xcbd7d9, 0.24)
@@ -396,6 +398,16 @@ function drawMap(
       padding: { x: 5, y: 3 },
     })
     .setDepth(3)
+}
+
+function cityBackdropKey(id: ReturnType<typeof cityMapFor>['id']): string | undefined {
+  const keys: Partial<Record<ReturnType<typeof cityMapFor>['id'], string>> = {
+    tiete: 'tiete-slice',
+    centro: 'centro-anhangabau',
+    paulista: 'paulista-slice',
+    minhocao: 'minhocao-slice',
+  }
+  return keys[id]
 }
 
 function drawUrbanDepth(scene: Phaser.Scene, map: ReturnType<typeof cityMapFor>): void {
