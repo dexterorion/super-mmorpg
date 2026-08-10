@@ -9,6 +9,8 @@
   --paper: #f0eadb;
   --amber: #f3c969;
   --green: #57a17f;
+  --sodium: #e9bb5e;
+  --wet-asphalt: #151f2b;
 }
 * {
   box-sizing: border-box;
@@ -107,8 +109,17 @@ button {
   min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
-  padding: 24px clamp(18px, 5vw, 72px);
-  background: linear-gradient(180deg, rgba(11, 16, 32, 0.18), rgba(11, 16, 32, 0.58));
+  padding: 18px clamp(18px, 3.4vw, 48px);
+  pointer-events: none;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(7, 16, 24, 0.18),
+      transparent 28%,
+      transparent 72%,
+      rgba(7, 16, 24, 0.2)
+    ),
+    linear-gradient(180deg, rgba(7, 16, 24, 0.12), rgba(7, 16, 24, 0.42));
 }
 #world-prompt {
   position: fixed;
@@ -129,9 +140,23 @@ button {
 .hud {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  border: 3px solid var(--paper);
-  box-shadow: 6px 6px 0 var(--ink);
-  background: rgba(16, 25, 35, 0.92);
+  justify-self: start;
+  width: min(780px, calc(100vw - 96px));
+  border: 2px solid #b9c2bd;
+  border-bottom: 4px solid var(--sodium);
+  box-shadow: 5px 5px 0 rgba(7, 16, 24, 0.8);
+  background: rgba(13, 25, 34, 0.91);
+  pointer-events: auto;
+  position: relative;
+}
+.hud::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: -7px;
+  height: 3px;
+  background: linear-gradient(90deg, #2f80a8 0 29%, #d04c43 29% 52%, #e1bc55 52% 73%, #4d996e 73%);
 }
 
 .news-flash {
@@ -190,9 +215,11 @@ button {
   justify-self: start;
   width: auto;
   margin: 18px 0 0;
-  padding: 10px 16px;
-  background: #101923d9;
-  border-left: 5px solid var(--amber);
+  padding: 8px 14px 9px;
+  background: rgba(9, 21, 30, 0.88);
+  border-left: 4px solid var(--sodium);
+  box-shadow: 4px 4px 0 rgba(7, 16, 24, 0.72);
+  pointer-events: auto;
 }
 .scene.exploring h2 {
   font-size: 24px;
@@ -232,6 +259,14 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.dialogue,
+.actions,
+.utility-buttons,
+.menu,
+.debug,
+.title-card {
+  pointer-events: auto;
 }
 .dialogue strong {
   font-size: clamp(17px, 2.4vw, 25px);
@@ -278,8 +313,8 @@ button small {
 }
 .utility-buttons {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  right: 18px;
+  bottom: 18px;
   display: flex;
   gap: 8px;
 }
@@ -355,6 +390,7 @@ button small {
   }
   .hud {
     grid-template-columns: 1fr 1fr;
+    width: 100%;
   }
   .hud span:nth-child(2) {
     border-right: 0;

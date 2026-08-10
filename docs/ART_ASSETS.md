@@ -47,3 +47,13 @@ determinística diretamente dessa grade, em escala inteira de 2×, sem recortar 
 distorcer o cenário de demonstração. Pedestres decorativos e personagens
 interativos compartilham proporção, contorno e paleta; somente os interativos
 recebem rótulo, colisão e diálogo.
+
+## Vertical slice do Centro
+
+`public/assets/garoa-city/centro-anhangabau.png` foi gerado especificamente para
+o projeto com a ferramenta de geração de imagens da OpenAI. O asset usa o pack
+Kenney apenas como referência de escala e linguagem pixel-art; não reproduz o
+mapa de demonstração. A composição foi dirigida por referências institucionais
+do Centro, com Viaduto do Chá, calçadão, fachadas históricas, banca, bicicletário,
+drenagem, postes e pavimento molhado. Personagens, chuva e HUD continuam sendo
+renderizados em tempo real.

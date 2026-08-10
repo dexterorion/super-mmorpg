@@ -53,6 +53,7 @@ export class WorldScene extends Phaser.Scene {
   private actors?: Phaser.Physics.Arcade.StaticGroup
   private exits?: Phaser.Physics.Arcade.StaticGroup
   private labels: Phaser.GameObjects.GameObject[] = []
+  private playerShadow?: Phaser.GameObjects.Ellipse
   private nearby?: { id: string; label: string }
   private exitCooldown = 0
   private enabled = false
@@ -62,6 +63,17 @@ export class WorldScene extends Phaser.Scene {
   }
   preload(): void {
     this.load.atlas('garoa', 'atlas.png', 'atlas.json')
+    this.load.image('centro-anhangabau', 'assets/garoa-city/centro-anhangabau.png')
+    this.load.spritesheet('garoa-player', 'assets/garoa-characters-v2/characters-sheet.png', {
+      frameWidth: 128,
+      frameHeight: 170,
+      endFrame: 71,
+    })
+    this.load.spritesheet('garoa-npcs', 'assets/garoa-characters-v3/characters-sheet.png', {
+      frameWidth: 128,
+      frameHeight: 170,
+      endFrame: 71,
+    })
     this.load.spritesheet('kenney-people', 'assets/kenney-rpg-urban/Tilemap/tilemap.png', {
       frameWidth: 16,
       frameHeight: 16,
@@ -100,10 +112,13 @@ export class WorldScene extends Phaser.Scene {
     this.createCollisionMap(map.collisions)
     this.createExits(bridge.presentation.exits)
     this.createActors(bridge.presentation.actors)
+    this.playerShadow = this.add
+      .ellipse(MAP_WIDTH * TILE * 0.5 + 3, MAP_HEIGHT * TILE * 0.8 + 14, 28, 12, 0x071018, 0.55)
+      .setDepth(9)
     this.player = this.physics.add
-      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'kenney-people', 24)
-      .setScale(4 / 3)
-    this.player.setSize(10, 6).setOffset(3, 10).setCollideWorldBounds(true).setDepth(10)
+      .sprite(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.8, 'garoa-player', 1)
+      .setScale(0.4)
+    this.player.setSize(48, 24).setOffset(40, 136).setCollideWorldBounds(true).setDepth(10)
     this.physics.add.collider(this.player, this.obstacles)
     this.physics.add.collider(this.player, this.actors)
     this.physics.add.overlap(this.player, this.exits, (_player, zone) => this.enterExit(zone))
@@ -161,13 +176,14 @@ export class WorldScene extends Phaser.Scene {
       const x = (index % 2 === 0 ? 18 : 6) * TILE
       const y = 12.1 * TILE
       const sprite = this.physics.add
-        .staticSprite(x, y, 'kenney-people', npcFrame(actor.id))
-        .setScale(4 / 3)
+        .staticSprite(x, y, 'garoa-npcs', npcFrame(actor.id))
+        .setScale(0.4)
         .setDepth(8)
       sprite.setData('actionId', actor.id)
       sprite.setData('label', actor.label)
       sprite.refreshBody()
       this.actors?.add(sprite)
+      this.add.ellipse(x + 3, y + 15, 28, 12, 0x071018, 0.55).setDepth(7)
       const label = this.add
         .text(x, y - 30, actor.label, {
           fontFamily: 'monospace',
@@ -214,6 +230,7 @@ export class WorldScene extends Phaser.Scene {
       .normalize()
       .scale(125)
     this.player.setVelocity(velocity.x, velocity.y)
+    this.playerShadow?.setPosition(this.player.x + 3, this.player.y + 15)
     const direction =
       Math.abs(velocity.x) > Math.abs(velocity.y)
         ? velocity.x < 0
@@ -336,11 +353,17 @@ function drawMap(
   placeId: string,
   map: ReturnType<typeof cityMapFor>
 ): void {
-  for (const entry of map.tiles)
+  if (map.id === 'centro') {
     scene.add
-      .sprite((entry.x + 0.5) * TILE, (entry.y + 0.5) * TILE, 'kenney-people', entry.frame)
-      .setScale(2)
-      .setDepth(entry.depth ?? 0)
+      .image(MAP_WIDTH * TILE * 0.5, MAP_HEIGHT * TILE * 0.5, 'centro-anhangabau')
+      .setDepth(0)
+  } else {
+    for (const entry of map.tiles)
+      scene.add
+        .sprite((entry.x + 0.5) * TILE, (entry.y + 0.5) * TILE, 'kenney-people', entry.frame)
+        .setScale(2)
+        .setDepth(entry.depth ?? 0)
+  }
   scene.add
     .rectangle(
       MAP_WIDTH * TILE * 0.5,
@@ -348,14 +371,22 @@ function drawMap(
       MAP_WIDTH * TILE,
       MAP_HEIGHT * TILE,
       palette.void,
-      0.3
+      map.id === 'centro' ? 0.1 : 0.3
     )
     .setDepth(1)
-  drawLandmark(scene, map)
-  const rain = scene.add.graphics().setDepth(2)
-  rain.lineStyle(1, 0xa7b2b5, 0.28)
-  for (let x = -MAP_HEIGHT * TILE; x < MAP_WIDTH * TILE; x += 38)
-    rain.lineBetween(x, 0, x + MAP_HEIGHT * TILE * 0.35, MAP_HEIGHT * TILE)
+  if (map.id !== 'centro') drawLandmark(scene, map)
+  drawUrbanDepth(scene, map)
+  const rain = scene.add.graphics().setDepth(12)
+  rain.lineStyle(1, 0xcbd7d9, 0.24)
+  for (let x = -MAP_HEIGHT * TILE; x < MAP_WIDTH * TILE; x += 32)
+    rain.lineBetween(x, -18, x + 13, 28)
+  scene.tweens.add({
+    targets: rain,
+    x: 32,
+    y: 46,
+    duration: 520,
+    repeat: -1,
+  })
   scene.add
     .text(14, MAP_HEIGHT * TILE - 25, placeId.replaceAll('_', ' ').toUpperCase(), {
       fontFamily: 'monospace',
@@ -365,6 +396,20 @@ function drawMap(
       padding: { x: 5, y: 3 },
     })
     .setDepth(3)
+}
+
+function drawUrbanDepth(scene: Phaser.Scene, map: ReturnType<typeof cityMapFor>): void {
+  for (const collision of map.collisions)
+    scene.add
+      .rectangle(
+        (collision.x + collision.width / 2) * TILE + 8,
+        (collision.y + collision.height / 2) * TILE + 10,
+        collision.width * TILE,
+        collision.height * TILE,
+        0x071018,
+        0.28
+      )
+      .setDepth(1.5)
 }
 
 function drawLandmark(scene: Phaser.Scene, map: ReturnType<typeof cityMapFor>): void {
@@ -394,7 +439,7 @@ function drawLandmark(scene: Phaser.Scene, map: ReturnType<typeof cityMapFor>): 
   if (map.id === 'minhocao') scene.add.rectangle(384, 116, 768, 34, 0x485270, 0.88).setDepth(3)
 }
 function directionFrame(direction: 'down' | 'left' | 'right' | 'up', step: number): number {
-  return 23 + { left: 0, down: 1, up: 2, right: 3 }[direction] + step * 27
+  return { down: 0, left: 3, right: 6, up: 9 }[direction] + step
 }
 function npcFrame(actionId: string): number {
   const id = actionId.replace('talk:', '')
@@ -407,7 +452,7 @@ function npcFrame(actionId: string): number {
     renan: 5,
     val: 2,
   }
-  return 24 + (rows[id] ?? 5) * 81
+  return (rows[id] ?? 5) * 12 + 1
 }
 
 export function mountBackdrop(parent: string): WorldController {
