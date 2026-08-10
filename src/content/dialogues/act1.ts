@@ -1,4 +1,56 @@
-import type { Dialogue } from '../../core/dialogue/dialogue.js'
+import type { Choice, Dialogue } from '../../core/dialogue/dialogue.js'
+
+interface CulturalSource {
+  readonly label: string
+  readonly url: string
+}
+
+const COPAN_SOURCE: CulturalSource = {
+  label: 'Prefeitura de São Paulo · Edifício Copan',
+  url: 'https://capital.sp.gov.br/w/noticia/prefeitura-concede-incentivo-inedito-da-lei-cidade-limpa-para-restauro-da-fachada-do-edificio-copan-1',
+}
+const CCSP_SOURCE: CulturalSource = {
+  label: 'Centro Cultural São Paulo · site institucional',
+  url: 'https://centrocultural.sp.gov.br/',
+}
+const VAI_VAI_SOURCE: CulturalSource = {
+  label: 'Vai-Vai · site institucional',
+  url: 'https://www.vaivai.com.br/',
+}
+const MASP_SOURCE: CulturalSource = {
+  label: 'MASP · instituição e edifício',
+  url: 'https://www.masp.org.br/sobre/',
+}
+const IBIRAPUERA_SOURCE: CulturalSource = {
+  label: 'Parque Ibirapuera · Marquise',
+  url: 'https://parqueibirapuera.org/areas-externas-do-parque-ibirapuera/marquise-do-parque-ibirapuera/',
+}
+
+function sourcedChoice(
+  id: string,
+  text: string,
+  flagId: string,
+  journalText: string,
+  source: CulturalSource,
+  entryKind: 'lesson' | 'contact'
+): Choice {
+  return {
+    id,
+    text,
+    effects: [
+      { kind: 'flag', id: flagId, value: true },
+      { kind: 'savvyXp', amount: 6 },
+      {
+        kind: 'journal',
+        id: `culture:${id}`,
+        text: `${journalText} Fonte: ${source.label}.`,
+        entryKind,
+        source,
+      },
+    ],
+    exit: true,
+  }
+}
 
 export const dialoguesAct1 = {
   dlg_intro: {
@@ -571,16 +623,24 @@ export const dialoguesAct1 = {
           'A fachada curva parece dobrar o quarteirão sem separar quem passa.',
           'No térreo, comércio e moradia dividem o mesmo endereço.',
         ],
-        onEnter: [
-          { kind: 'savvyXp', amount: 4 },
-          {
-            kind: 'journal',
-            id: 'lugar_copan',
-            text: 'Copan: uma cidade vertical com vida também no térreo.',
-            entryKind: 'lesson',
-          },
+        choices: [
+          sourcedChoice(
+            'ler_terreo_copan',
+            'Mapear como moradia, comércio e passagem dividem o térreo.',
+            'education:copan_mixed_use',
+            'Registrei o uso misto do Copan e ganhei repertório urbano.',
+            COPAN_SOURCE,
+            'lesson'
+          ),
+          sourcedChoice(
+            'comparar_moradia_copan',
+            'Comparar a arquitetura desejada com o custo real de morar aqui.',
+            'housing:copan_tradeoff',
+            'Comparei valor arquitetônico, centralidade e custo de moradia no Copan.',
+            COPAN_SOURCE,
+            'lesson'
+          ),
         ],
-        end: true,
       },
     },
   },
@@ -594,16 +654,24 @@ export const dialoguesAct1 = {
           'A oficina começa com papel, fita e uma pergunta: “Que cidade cabe aqui?”',
           'Sua resposta vira parte de um mapa coletivo na parede.',
         ],
-        onEnter: [
-          { kind: 'affinity', affinity: 'gab', delta: 1 },
-          {
-            kind: 'journal',
-            id: 'lugar_ccsp',
-            text: 'No CCSP, participei de uma oficina e deixei meu traço no mapa.',
-            entryKind: 'lesson',
-          },
+        choices: [
+          sourcedChoice(
+            'mapa_coletivo_ccsp',
+            'Contribuir para o mapa coletivo da oficina.',
+            'network:ccsp_collective_map',
+            'Contribuí para um mapa coletivo no CCSP e conheci outros participantes.',
+            CCSP_SOURCE,
+            'contact'
+          ),
+          sourcedChoice(
+            'procurar_formacao_ccsp',
+            'Procurar a agenda de oficinas e continuar a formação.',
+            'education:ccsp_workshops',
+            'Passei a acompanhar oficinas e projetos formativos do CCSP.',
+            CCSP_SOURCE,
+            'lesson'
+          ),
         ],
-        end: true,
       },
     },
   },
@@ -617,16 +685,24 @@ export const dialoguesAct1 = {
           'Uma ritmista percebe seu pé atrasado e mostra onde o compasso vira.',
           'Na segunda passagem, você já consegue caminhar junto da bateria.',
         ],
-        onEnter: [
-          { kind: 'energy', delta: 8 },
-          {
-            kind: 'journal',
-            id: 'lugar_vai_vai',
-            text: 'Na quadra da Vai-Vai, aprendi o compasso seguindo a bateria.',
-            entryKind: 'lesson',
-          },
+        choices: [
+          sourcedChoice(
+            'aprender_compasso_vai_vai',
+            'Aprender o compasso respeitando quem sustenta a bateria.',
+            'education:vaivai_rhythm',
+            'Aprendi o compasso na Vai-Vai sem reduzir a escola de samba ao desfile.',
+            VAI_VAI_SOURCE,
+            'lesson'
+          ),
+          sourcedChoice(
+            'ajudar_producao_vai_vai',
+            'Ajudar na organização e conhecer o trabalho coletivo da quadra.',
+            'work:vaivai_collective',
+            'Ajudei na produção da quadra e entrei numa rede de trabalho cultural.',
+            VAI_VAI_SOURCE,
+            'contact'
+          ),
         ],
-        end: true,
       },
     },
   },
@@ -640,16 +716,24 @@ export const dialoguesAct1 = {
           'Os quadros parecem suspensos, como se a sala recusasse uma ordem única.',
           'Você escolhe o próprio caminho entre histórias distantes.',
         ],
-        onEnter: [
-          { kind: 'savvyXp', amount: 6 },
-          {
-            kind: 'journal',
-            id: 'lugar_masp',
-            text: 'No MASP, percorri a exposição sem uma rota obrigatória.',
-            entryKind: 'lesson',
-          },
+        choices: [
+          sourcedChoice(
+            'percurso_masp',
+            'Montar um percurso próprio entre as obras expostas.',
+            'education:masp_open_display',
+            'No MASP, observei como a montagem permite percursos não lineares.',
+            MASP_SOURCE,
+            'lesson'
+          ),
+          sourcedChoice(
+            'conversa_mediacao_masp',
+            'Participar de uma conversa de mediação sobre a exposição.',
+            'network:masp_mediation',
+            'Participei de uma mediação no MASP e ampliei minha rede cultural.',
+            MASP_SOURCE,
+            'contact'
+          ),
         ],
-        end: true,
       },
     },
   },
@@ -663,16 +747,24 @@ export const dialoguesAct1 = {
           'Skatistas, famílias e dançarinos inventam faixas invisíveis no concreto.',
           'Você desacelera e atravessa sem cortar o caminho de ninguém.',
         ],
-        onEnter: [
-          { kind: 'energy', delta: 10 },
-          {
-            kind: 'journal',
-            id: 'lugar_ibirapuera',
-            text: 'A Marquise do Ibirapuera é abrigo e passagem compartilhada.',
-            entryKind: 'lesson',
-          },
+        choices: [
+          sourcedChoice(
+            'compartilhar_marquise',
+            'Entrar numa atividade sem bloquear a passagem das outras pessoas.',
+            'network:ibirapuera_shared_space',
+            'Participei da Marquise como espaço compartilhado de encontro e passagem.',
+            IBIRAPUERA_SOURCE,
+            'contact'
+          ),
+          sourcedChoice(
+            'observar_usos_marquise',
+            'Registrar como grupos diferentes negociam o mesmo espaço.',
+            'education:ibirapuera_public_space',
+            'Observei como usos culturais e cotidianos convivem na Marquise.',
+            IBIRAPUERA_SOURCE,
+            'lesson'
+          ),
         ],
-        end: true,
       },
     },
   },

@@ -62,6 +62,70 @@ describe('Act 1 content', () => {
   })
 
   it.each([
+    ['centro_copan', 'do:observar_copan', 'choice:ler_terreo_copan', 'education:copan_mixed_use'],
+    [
+      'centro_ccsp',
+      'do:participar_oficina',
+      'choice:mapa_coletivo_ccsp',
+      'network:ccsp_collective_map',
+    ],
+    [
+      'bixiga_vai_vai',
+      'do:acompanhar_ensaio',
+      'choice:aprender_compasso_vai_vai',
+      'education:vaivai_rhythm',
+    ],
+    ['paulista_masp', 'do:visitar_masp', 'choice:percurso_masp', 'education:masp_open_display'],
+    [
+      'ibirapuera_marquise',
+      'do:cruzar_marquise',
+      'choice:compartilhar_marquise',
+      'network:ibirapuera_shared_space',
+    ],
+  ] as const)(
+    'turns the featured place %s into a sourced persistent choice',
+    (place, actionId, choiceId, flagId) => {
+      const session = new GameSession(content)
+      const initial = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 10 })
+      let state: GameState = {
+        ...initial,
+        district: content.places[place]!.district,
+        place,
+        mode: { kind: 'world' },
+      }
+      state = session.performById(state, actionId).state
+      state = session.performById(state, 'advance').state
+      state = session.performById(state, choiceId).state
+      expect(state.flags[flagId]).toBe(true)
+      expect(state.journal.at(-1)?.source?.url).toMatch(/^https:\/\//)
+    }
+  )
+
+  it('keeps two sourced routes at every featured cultural place', () => {
+    for (const dialogueId of [
+      'dlg_copan',
+      'dlg_ccsp',
+      'dlg_vai_vai',
+      'dlg_masp',
+      'dlg_ibirapuera',
+    ]) {
+      const choices = content.dialogues[dialogueId]?.nodes.start?.choices ?? []
+      expect(choices).toHaveLength(2)
+      for (const choice of choices) {
+        expect(choice.effects).toContainEqual(
+          expect.objectContaining({ kind: 'flag', value: true })
+        )
+        expect(choice.effects).toContainEqual(
+          expect.objectContaining({
+            kind: 'journal',
+            source: expect.objectContaining({ url: expect.stringMatching(/^https:\/\//) }),
+          })
+        )
+      }
+    }
+  })
+
+  it.each([
     [
       'centro_sesc_24_maio',
       'do:formacao_sesc',
