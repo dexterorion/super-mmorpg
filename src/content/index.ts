@@ -4,6 +4,7 @@ import { desenrolosAct1 } from './desenrolos/act1.js'
 import { items } from './items.js'
 import { npcs } from './npcs.js'
 import { districtsAct1, placesAct1 } from './world/act1.js'
+import { housing } from './housing.js'
 
 export const content: ContentBundle = {
   districts: districtsAct1,
@@ -12,6 +13,7 @@ export const content: ContentBundle = {
   dialogues: dialoguesAct1,
   desenrolos: desenrolosAct1,
   items,
+  housing,
 }
 
 export default content

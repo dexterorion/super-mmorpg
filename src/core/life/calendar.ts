@@ -1,6 +1,7 @@
 import { addMoney, periodAt, restoreEnergy, spendEnergy } from '../economy/economy.js'
 import { isFlagTrue, withFlag, withJournalEntry, type GameState } from '../state/state.js'
 import type { GameEvent } from '../types.js'
+import { currentCareer } from './career.js'
 
 export type AgendaActivity = 'work' | 'study' | 'socialize' | 'rest'
 
@@ -35,14 +36,29 @@ export function hasScheduled(state: GameState, activity: AgendaActivity): boolea
 export function canSchedule(state: GameState, activity: AgendaActivity): boolean {
   if (isFlagTrue(state, closedKey(state.clock.day)) || hasScheduled(state, activity)) return false
   if (activity === 'study' && state.education?.status !== 'active') return false
-  return activity === 'rest' || state.player.energy >= agenda[activity].energy
+  const definition = agendaFor(state, activity)
+  return activity === 'rest' || state.player.energy >= definition.energy
+}
+
+export function agendaFor(state: GameState, activity: AgendaActivity): AgendaDefinition {
+  if (activity !== 'work') return agenda[activity]
+  const career = currentCareer(state)
+  return {
+    id: 'work',
+    label: `Trabalhar · ${career.occupation}`,
+    minutes: career.workdayMinutes,
+    energy: career.workdayEnergy,
+  }
 }
 
 /** Records one activity at most once per day and keeps it inside the current day. */
 export function scheduleActivity(state: GameState, activity: AgendaActivity): CalendarResult {
   if (!canSchedule(state, activity)) return { state, events: [] }
-  const definition = agenda[activity]
+  const definition = agendaFor(state, activity)
   let next = withFlag(state, activityKey(state.clock.day, activity), true)
+  if (activity === 'work') {
+    next = withFlag(next, 'career:work-days', Number(next.flags['career:work-days'] ?? 0) + 1)
+  }
   next =
     definition.energy < 0
       ? restoreEnergy(next, -definition.energy)
@@ -69,6 +85,8 @@ export interface MonthStatement {
   readonly salary: number
   readonly rent: number
   readonly net: number
+  readonly occupation: string
+  readonly housing: string
 }
 
 export function monthStatement(state: GameState, month: number): MonthStatement {
@@ -80,7 +98,15 @@ export function monthStatement(state: GameState, month: number): MonthStatement 
   }
   const salary = Math.round((state.player.monthlyIncome * Math.min(workDays, 20)) / 20)
   const rent = state.player.monthlyRent
-  return { month, workDays, salary, rent, net: salary - rent }
+  return {
+    month,
+    workDays,
+    salary,
+    rent,
+    net: salary - rent,
+    occupation: state.player.occupation,
+    housing: state.player.housing,
+  }
 }
 
 /**

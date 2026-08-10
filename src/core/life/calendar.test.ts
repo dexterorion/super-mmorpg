@@ -9,7 +9,8 @@ describe('metropolitan calendar', () => {
   it('records each agenda activity at most once per day', () => {
     const worked = scheduleActivity(initial(), 'work')
     expect(worked.events).toContainEqual(expect.objectContaining({ type: 'agendaActivity' }))
-    expect(worked.state.player.energy).toBe(48)
+    expect(worked.state.player.energy).toBe(51)
+    expect(worked.state.flags['career:work-days']).toBe(1)
     expect(scheduleActivity(worked.state, 'work')).toEqual({ state: worked.state, events: [] })
   })
 
@@ -43,5 +44,12 @@ describe('metropolitan calendar', () => {
     const replay = closeDay({ ...state, clock: { ...state.clock, day: 30 } })
     expect(replay.events).toEqual([])
     expect(replay.state.player.money).toBe(state.player.money)
+  })
+
+  it('captures the active occupation and housing in each monthly statement', () => {
+    let state = initial()
+    for (let day = 1; day <= 30; day += 1) state = closeDay(state).state
+    const entry = state.journal.find((item) => item.id === 'life:month:1')
+    expect(entry?.text).toContain('salário e aluguel')
   })
 })

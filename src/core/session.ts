@@ -3,6 +3,7 @@ import type {
   DialogueId,
   DistrictId,
   GameEvent,
+  HousingId,
   ItemId,
   NpcId,
   PlaceId,
@@ -30,12 +31,20 @@ import { advanceEducation } from './life/education.js'
 import { applyDueConjuncture } from './life/conjuncture.js'
 import {
   agenda,
+  agendaFor,
   canSchedule,
   closeDay,
   hasScheduled,
   scheduleActivity,
   type AgendaActivity,
 } from './life/calendar.js'
+import {
+  advanceCareer,
+  availableCareerMove,
+  canAdvanceCareer,
+  currentCareer,
+} from './life/career.js'
+import { canMoveHousing, moveHousing, movingCost, type HousingOption } from './life/housing.js'
 import {
   advanceFamily,
   assessFamilyImpact,
@@ -63,6 +72,7 @@ export interface ContentBundle {
   readonly dialogues: Readonly<Record<DialogueId, Dialogue>>
   readonly desenrolos: Readonly<Record<DesenroloId, DesenroloDef>>
   readonly items: Readonly<Record<ItemId, ItemDef>>
+  readonly housing?: Readonly<Record<HousingId, HousingOption>>
 }
 
 export type Action =
@@ -80,6 +90,8 @@ export type Action =
         | { readonly kind: 'activity'; readonly activity: AgendaActivity }
         | { readonly kind: 'closeDay' }
     }
+  | { readonly kind: 'career'; readonly decision: 'advance' }
+  | { readonly kind: 'housing'; readonly target: HousingId }
   | {
       readonly kind: 'family'
       readonly decision:
@@ -99,7 +111,17 @@ export interface AvailableAction {
   readonly enabled: boolean
   readonly lockedReason?: string
   /** Grouping hint for the UI. */
-  readonly group: 'dialogue' | 'move' | 'people' | 'act' | 'battle' | 'item' | 'life' | 'agenda'
+  readonly group:
+    | 'dialogue'
+    | 'move'
+    | 'people'
+    | 'act'
+    | 'battle'
+    | 'item'
+    | 'life'
+    | 'agenda'
+    | 'career'
+    | 'housing'
 }
 
 export interface PerformResult {
@@ -119,6 +141,8 @@ const SECONDS_PER_ACTION: Record<Action['kind'], number> = {
   useItem: 4,
   family: 9,
   agenda: 5,
+  career: 8,
+  housing: 8,
 }
 
 const TRAVEL_MODE_LABEL: Readonly<Record<TravelMode, string>> = {
@@ -373,9 +397,10 @@ export class GameSession {
     const actions: AvailableAction[] = (Object.keys(agenda) as AgendaActivity[]).map((activity) => {
       const available = canSchedule(state, activity)
       const alreadyDone = hasScheduled(state, activity)
+      const definition = agendaFor(state, activity)
       return {
         id: `agenda:${activity}`,
-        label: `${agenda[activity].label} · ${formatDuration(agenda[activity].minutes)}`,
+        label: `${definition.label} · ${formatDuration(definition.minutes)}`,
         action: { kind: 'agenda', decision: { kind: 'activity', activity } },
         enabled: available,
         ...(available
@@ -401,6 +426,57 @@ export class GameSession {
     return actions
   }
 
+  private careerActions(state: GameState): readonly AvailableAction[] {
+    const target = availableCareerMove(state)
+    if (!target) return []
+    const workDays = Number(state.flags['career:work-days'] ?? 0)
+    const enabled = canAdvanceCareer(state) && state.player.energy >= 4
+    return [
+      {
+        id: 'career:advance',
+        label: `Candidatar-se: ${target.occupation} · ${formatMoney(target.monthlyIncome)}/mês`,
+        action: { kind: 'career', decision: 'advance' },
+        enabled,
+        ...(enabled
+          ? {}
+          : {
+              lockedReason:
+                workDays < 60
+                  ? `${workDays}/60 dias de experiência`
+                  : state.education?.status !== 'completed'
+                    ? 'concluir uma formação'
+                    : 'sem disposição',
+            }),
+        group: 'career',
+      },
+    ]
+  }
+
+  private housingActions(state: GameState): readonly AvailableAction[] {
+    return Object.values(this.content.housing ?? {})
+      .filter((option) => option.id !== state.player.housing)
+      .map((option) => {
+        const enabled = canMoveHousing(state, option) && state.player.energy >= 4
+        return {
+          id: `housing:move:${option.id}`,
+          label: `${option.name} · mudança ${formatMoney(movingCost(option))} · aluguel ${formatMoney(option.monthlyRent)}`,
+          action: { kind: 'housing' as const, target: option.id },
+          enabled,
+          ...(enabled
+            ? {}
+            : {
+                lockedReason:
+                  state.clock.day < 30
+                    ? 'disponível após o primeiro mês'
+                    : state.player.money < movingCost(option)
+                      ? 'grana insuficiente para a mudança'
+                      : 'já houve uma mudança hoje',
+              }),
+          group: 'housing' as const,
+        }
+      })
+  }
+
   familyImpact(state: GameState) {
     const comfortByHousing: Record<string, number> = {
       pensao_bixiga: 2,
@@ -409,20 +485,13 @@ export class GameSession {
       quarto_guarulhos: 2,
       studio_copan: 4,
     }
-    const workHoursByArchetype: Record<string, number> = {
-      pedreiro: 48,
-      faria_limer: 52,
-      artista: 38,
-      entregador: 50,
-      estudante: 24,
-      saude: 48,
-    }
+    const career = currentCareer(state)
     return assessFamilyImpact({
       family: state.family,
       housing: state.player.housing,
       housingComfort: comfortByHousing[state.player.housing] ?? 2,
       monthlyHouseholdIncome: state.player.monthlyIncome,
-      weeklyWorkHours: workHoursByArchetype[state.player.archetype] ?? 40,
+      weeklyWorkHours: career.weeklyHours,
       commuteMinutesPerDay: commuteFor(state).minutes * 2,
     })
   }
@@ -531,6 +600,8 @@ export class GameSession {
 
     actions.push(...this.familyActions(state))
     actions.push(...this.agendaActions(state))
+    actions.push(...this.careerActions(state))
+    actions.push(...this.housingActions(state))
 
     return actions
   }
@@ -660,6 +731,42 @@ export class GameSession {
         return action.decision.kind === 'closeDay'
           ? closeDay(state)
           : scheduleActivity(state, action.decision.activity)
+      case 'career': {
+        if (action.decision !== 'advance' || !canAdvanceCareer(state) || state.player.energy < 4)
+          return { state, events: [] }
+        const previous = currentCareer(state)
+        const next = advanceMinutes(spendEnergy(advanceCareer(state), 4), 240)
+        const active = currentCareer(next)
+        return {
+          state: next,
+          events: [
+            {
+              type: 'careerChanged',
+              from: previous.id,
+              to: active.id,
+              monthlyIncome: next.player.monthlyIncome,
+            },
+          ],
+        }
+      }
+      case 'housing': {
+        const option = this.content.housing?.[action.target]
+        if (!option || !canMoveHousing(state, option) || state.player.energy < 4)
+          return { state, events: [] }
+        const previous = state.player.housing
+        const next = advanceMinutes(spendEnergy(moveHousing(state, option), 4), 240)
+        return {
+          state: next,
+          events: [
+            {
+              type: 'housingChanged',
+              from: previous,
+              to: option.id,
+              monthlyRent: option.monthlyRent,
+            },
+          ],
+        }
+      }
     }
   }
 

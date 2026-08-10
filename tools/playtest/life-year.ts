@@ -20,10 +20,17 @@ export interface LifeYearResult {
   readonly finalMoney: number
   readonly activities: Readonly<Record<string, number>>
   readonly educationStatus: string
+  readonly finalOccupation: string
+  readonly finalHousing: string
+  readonly careerChanges: number
+  readonly housingChanges: number
   readonly invariants: {
     readonly noSoftlock: boolean
     readonly safeIntegerMoney: boolean
     readonly monthlyCyclesUnique: boolean
+    readonly careerChanged: boolean
+    readonly housingChanged: boolean
+    readonly monthlyLedgerReflectsChanges: boolean
   }
 }
 
@@ -55,6 +62,16 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
   const events: GameEvent[] = []
   const activityCounts: Record<string, number> = {}
   for (let closed = 0; closed < 365; closed += 1) {
+    if (state.clock.day === 100) {
+      const career = session.performById(state, 'career:advance')
+      state = career.state
+      events.push(...career.events)
+    }
+    if (state.clock.day === 180) {
+      const move = session.performById(state, 'housing:move:quarto_guarulhos')
+      state = move.state
+      events.push(...move.events)
+    }
     const weekday = ((state.clock.day - 1) % 7) + 1
     const planned = [
       ...(weekday <= 5 ? ['work'] : []),
@@ -80,6 +97,9 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
   const months = events
     .filter((event) => event.type === 'monthSettled')
     .map((event) => Number(event.month))
+  const careerChanges = events.filter((event) => event.type === 'careerChanged').length
+  const housingChanges = events.filter((event) => event.type === 'housingChanged').length
+  const monthlyStatements = events.filter((event) => event.type === 'monthSettled')
   return {
     archetype: archetypeId,
     seed,
@@ -89,10 +109,19 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
     finalMoney: state.player.money,
     activities: activityCounts,
     educationStatus: state.education?.status ?? 'none',
+    finalOccupation: state.player.occupation,
+    finalHousing: state.player.housing,
+    careerChanges,
+    housingChanges,
     invariants: {
       noSoftlock: state.clock.day === 366,
       safeIntegerMoney: Number.isSafeInteger(state.player.money) && state.player.money >= 0,
       monthlyCyclesUnique: months.length === new Set(months).size,
+      careerChanged: careerChanges === 1,
+      housingChanged: housingChanges === 1,
+      monthlyLedgerReflectsChanges:
+        monthlyStatements.some((event) => event.occupation === state.player.occupation) &&
+        monthlyStatements.some((event) => event.housing === state.player.housing),
     },
   }
 }

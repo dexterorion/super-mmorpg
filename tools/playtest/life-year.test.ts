@@ -12,10 +12,16 @@ describe('365-day life simulation', () => {
         monthsSettled: 12,
         finalDay: 366,
         educationStatus: 'completed',
+        finalHousing: 'quarto_guarulhos',
+        careerChanges: 1,
+        housingChanges: 1,
         invariants: {
           noSoftlock: true,
           safeIntegerMoney: true,
           monthlyCyclesUnique: true,
+          careerChanged: true,
+          housingChanged: true,
+          monthlyLedgerReflectsChanges: true,
         },
       })
       expect(result.activities.work).toBeGreaterThanOrEqual(260)

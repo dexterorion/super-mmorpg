@@ -18,6 +18,7 @@ import {
   type EducationPathId,
 } from './core/life/education.js'
 import { activeConjuncture } from './core/life/conjuncture.js'
+import { currentCareer } from './core/life/career.js'
 import { EventBus, ConsoleExporter, NoopExporter } from './observability/events.js'
 import { browserClock, LocalSaveStorage } from './platform/browser.js'
 
@@ -161,7 +162,13 @@ function render(): void {
   }
   const actions = session
     .availableActions(state)
-    .filter((item) => item.group !== 'life' && item.group !== 'agenda')
+    .filter(
+      (item) =>
+        item.group !== 'life' &&
+        item.group !== 'agenda' &&
+        item.group !== 'career' &&
+        item.group !== 'housing'
+    )
   const dialogue = dialogueView(state, session.dialogueLookup)
   const battle = battleView(state, session.desenroloLookup)
   const conjuncture = activeConjuncture(state)
@@ -221,20 +228,13 @@ function menu(): string {
   const selectedCommute = estimates.find(
     (estimate) => estimate.mode === player.preferredTravelMode
   )!
-  const work: Record<ArchetypeId, { hours: number; flexibility: number }> = {
-    pedreiro: { hours: 48, flexibility: 0.15 },
-    faria_limer: { hours: 52, flexibility: 0.35 },
-    artista: { hours: 38, flexibility: 0.65 },
-    entregador: { hours: 50, flexibility: 0.45 },
-    estudante: { hours: 24, flexibility: 0.7 },
-    saude: { hours: 48, flexibility: 0.2 },
-  }
+  const career = currentCareer(state!)
   const education = allEducationAssessments({
     archetype: player.archetype,
     monthlyDisposableIncome: Math.max(0, player.monthlyIncome - player.monthlyRent),
-    weeklyWorkHours: work[player.archetype].hours,
+    weeklyWorkHours: career.weeklyHours,
     commuteMinutesPerDay: selectedCommute.minutes * 2,
-    scheduleFlexibility: work[player.archetype].flexibility,
+    scheduleFlexibility: career.flexibility,
   })
   const difficulty = (score: number): string =>
     score <= 8 ? 'cabe na rotina' : score <= 18 ? 'exige rearranjo' : 'sacrifício alto'
@@ -249,6 +249,8 @@ function menu(): string {
   const impact = session.familyImpact(state!)
   const familyActions = session.availableActions(state!).filter((item) => item.group === 'life')
   const agendaActions = session.availableActions(state!).filter((item) => item.group === 'agenda')
+  const careerActions = session.availableActions(state!).filter((item) => item.group === 'career')
+  const housingActions = session.availableActions(state!).filter((item) => item.group === 'housing')
   const relationshipStatus = partner
     ? `${family.partnership!.status === 'married' ? 'Casamento' : 'Parceria'} com ${partner}`
     : 'Sem parceria; vínculos de confiança podem virar uma vida a dois.'
@@ -260,7 +262,7 @@ function menu(): string {
         : family.childrenDecision === 'no'
           ? 'Decisão: não queremos filhos.'
           : 'A decisão sobre filhos está em aberto.'
-  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Agenda de hoje</h3><div class="education agenda-actions">${agendaActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('')}</div><h3>Família e cuidado</h3><p><b>${relationshipStatus}</b><br>${childrenStatus}</p>${family.children.length > 0 ? `<p>Cuidado: ${money(impact.monthlyCareCost)}/mês · ${impact.weeklyCareHours}h/semana · pressão de moradia ${impact.housingPressure} · pressão de tempo ${impact.timePressure}</p>` : ''}<div class="education family-actions">${familyActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('') || '<p>Fortaleça vínculos com as pessoas da cidade para abrir novas decisões.</p>'}</div><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3>${educationStatus}<div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês · ${option.path.durationMonths} meses</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}<br>${option.path.completionDescription}</small>${enrollment?.status === 'active' ? '' : `<button data-education="${option.path.id}">Matricular</button>`}</article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
+  return `<aside class="menu"><h3>Vida em São Paulo</h3><p><b>${archetypes[player.archetype].name}</b> · ${player.occupation}<br>Renda ${money(player.monthlyIncome)}/mês · aluguel ${money(player.monthlyRent)}/mês</p><p><b>Moradia</b><br>${home.name} · conforto ${home.comfort}/5</p><h3>Agenda de hoje</h3><div class="education agenda-actions">${agendaActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('')}</div><h3>Carreira</h3><p>${career.weeklyHours}h/semana · flexibilidade ${Math.round(career.flexibility * 100)}%</p><div class="education career-actions">${careerActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('') || '<p>Você alcançou a transição disponível neste arco.</p>'}</div><h3>Mudar de moradia</h3><div class="education housing-actions">${housingActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('')}</div><h3>Família e cuidado</h3><p><b>${relationshipStatus}</b><br>${childrenStatus}</p>${family.children.length > 0 ? `<p>Cuidado: ${money(impact.monthlyCareCost)}/mês · ${impact.weeklyCareHours}h/semana · pressão de moradia ${impact.housingPressure} · pressão de tempo ${impact.timePressure}</p>` : ''}<div class="education family-actions">${familyActions.map((item) => `<article><button data-action="${item.id}" ${item.enabled ? '' : 'disabled'}>${item.label}</button>${item.lockedReason ? `<small>${item.lockedReason}</small>` : ''}</article>`).join('') || '<p>Fortaleça vínculos com as pessoas da cidade para abrir novas decisões.</p>'}</div><h3>Deslocamento na garoa</h3><div class="commutes">${estimates.map((estimate) => `<button data-travel-mode="${estimate.mode}" class="${player.preferredTravelMode === estimate.mode ? 'active' : ''}"><b>${modeName[estimate.mode]}</b> ${estimate.minutes} min · ${money(estimate.cost)} · −${estimate.energy} disposição</button>`).join('')}</div><h3>Estudar é possível. O caminho não é igual.</h3>${educationStatus}<div class="education">${education.map((option) => `<article><b>${option.path.name}</b><span>${option.weeklyHoursRequired}h/semana · ${money(option.monthlyCost)}/mês · ${option.path.durationMonths} meses</span><small>${difficulty(option.accessDifficulty)} · dificuldade ${option.accessDifficulty}<br>${option.path.completionDescription}</small>${enrollment?.status === 'active' ? '' : `<button data-education="${option.path.id}">Matricular</button>`}</article>`).join('')}</div><h3>Caderninho</h3>${state!.journal.map((entry) => `<p><b>${entry.kind === 'objective' ? 'Objetivo' : entry.kind === 'contact' ? 'Contato' : 'Aprendi'}</b><br>${entry.text}</p>`).join('') || '<p>A primeira página ainda está em branco.</p>'}<h3>Salvar</h3><div class="slots">${SLOTS.map((slot) => `<button data-slot="${slot}">Slot ${slot}</button>`).join('')}</div><button data-command="menu">Fechar</button></aside>`
 }
 function debug(): string {
   return `<aside class="debug"><b>DEBUG · F3</b><pre>${JSON.stringify({ mode: state!.mode, place: state!.place, seed: state!.seed, rng: state!.rngState }, null, 2)}</pre>${telemetry

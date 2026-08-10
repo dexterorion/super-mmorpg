@@ -24,6 +24,7 @@ O arco de campanha não é o limite planejado do projeto. O “jogo da vida” a
 | Matrícula e progressão educacional desigual        | Integrada ao estado, sessão, Caderninho e saves                        |
 | Parceria, casamento, filhos e trabalho de cuidado  | Motor de regras e persistência prontos; conteúdo narrativo em expansão |
 | Conjuntura econômica e social de longo prazo       | Em integração ao loop jogável                                          |
+| Agenda, trabalho, carreira e mudança de moradia    | Tracer anual jogável; conteúdo narrativo em expansão                   |
 
 O conteúdo está em pt-BR. Código, identificadores e documentação técnica usam inglês.
 

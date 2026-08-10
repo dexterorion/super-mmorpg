@@ -1,7 +1,7 @@
 import type { Centavos, HousingId } from '../core/types.js'
+import type { HousingOption } from '../core/life/housing.js'
 
-export interface HousingDef {
-  readonly id: HousingId
+export interface HousingDef extends HousingOption {
   readonly name: string
   readonly district: string
   readonly monthlyRent: Centavos
