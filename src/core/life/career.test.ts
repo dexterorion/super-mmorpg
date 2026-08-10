@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { advanceCareer, availableCareerMove, canAdvanceCareer, currentCareer } from './career.js'
+import {
+  advanceCareer,
+  availableCareerMove,
+  canAdvanceCareer,
+  careerWorkDaysRequired,
+  currentCareer,
+} from './career.js'
 import { enrollInEducation } from './education.js'
 import { createInitialState, withFlag } from '../state/state.js'
 
@@ -43,5 +49,29 @@ describe('career paths', () => {
       monthlyIncome: 380_000,
     })
     expect(advanceCareer(advanced)).toBe(advanced)
+  })
+
+  it('opens a second transition only after 160 worked days', () => {
+    let state = withFlag(initial(), 'career:work-days', 60)
+    state = {
+      ...enrollInEducation(state, 'free_course'),
+      education: {
+        pathId: 'free_course',
+        status: 'completed',
+        enrolledOnDay: 1,
+        lastProgressDay: 91,
+        completedMonths: 3,
+      },
+    }
+    const first = advanceCareer(state)
+    expect(careerWorkDaysRequired(availableCareerMove(first)!)).toBe(160)
+    expect(canAdvanceCareer(first)).toBe(false)
+    const experienced = withFlag(first, 'career:work-days', 160)
+    const second = advanceCareer(experienced)
+    expect(second.player).toMatchObject({
+      occupation: 'Supervisão de obras',
+      monthlyIncome: 500_000,
+    })
+    expect(availableCareerMove(second)).toBeUndefined()
   })
 })

@@ -16,15 +16,15 @@ Uma escolha na Horizonte Urbano e o destino de Val formam quatro finais distinto
 
 O arco de campanha não é o limite planejado do projeto. O “jogo da vida” aberto — estudar, mudar de moradia, construir família e atravessar conjunturas econômicas durante anos — continua em evolução.
 
-| Sistema                                            | Estado atual                                                           |
-| -------------------------------------------------- | ---------------------------------------------------------------------- |
-| Campanha de cinco atos e quatro finais             | Jogável e coberta por playtest automatizado                            |
-| Exploração, colisões, NPCs e oito mapas distritais | Jogável                                                                |
-| Arquétipos, aluguel, renda e deslocamento          | Jogável                                                                |
-| Matrícula e progressão educacional desigual        | Integrada ao estado, sessão, Caderninho e saves                        |
-| Parceria, casamento, filhos e trabalho de cuidado  | Motor de regras e persistência prontos; conteúdo narrativo em expansão |
-| Conjuntura econômica e social de longo prazo       | Em integração ao loop jogável                                          |
-| Agenda, trabalho, carreira e mudança de moradia    | Tracer anual jogável; conteúdo narrativo em expansão                   |
+| Sistema                                            | Estado atual                                           |
+| -------------------------------------------------- | ------------------------------------------------------ |
+| Campanha de cinco atos e quatro finais             | Jogável e coberta por playtest automatizado            |
+| Exploração, colisões, NPCs e oito mapas distritais | Jogável                                                |
+| Arquétipos, aluguel, renda e deslocamento          | Jogável                                                |
+| Matrícula e progressão educacional desigual        | Integrada ao estado, sessão, Caderninho e saves        |
+| Parceria, casamento, filhos e trabalho de cuidado  | Jogável e integrado ao runner anual                    |
+| Conjuntura econômica e social de longo prazo       | Em integração ao loop jogável                          |
+| Agenda, trabalho, carreira e mudança de moradia    | Trajetória de 365 dias coberta para os seis arquétipos |
 
 O conteúdo está em pt-BR. Código, identificadores e documentação técnica usam inglês.
 

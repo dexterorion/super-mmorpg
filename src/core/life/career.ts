@@ -42,6 +42,16 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     510,
     12
   ),
+  construction_supervisor: career(
+    'construction_supervisor',
+    'pedreiro',
+    'Supervisão de obras',
+    500_000,
+    44,
+    0.3,
+    480,
+    11
+  ),
   finance_analyst: career(
     'finance_analyst',
     'faria_limer',
@@ -61,6 +71,16 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     0.4,
     540,
     11
+  ),
+  risk_manager: career(
+    'risk_manager',
+    'faria_limer',
+    'Gestão de riscos',
+    1_150_000,
+    46,
+    0.45,
+    510,
+    10
   ),
   cultural_producer: career(
     'cultural_producer',
@@ -82,6 +102,16 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     450,
     10
   ),
+  cultural_director: career(
+    'cultural_director',
+    'artista',
+    'Direção cultural',
+    400_000,
+    40,
+    0.62,
+    450,
+    9
+  ),
   courier: career('courier', 'entregador', 'Entrega por aplicativo', 240_000, 50, 0.45, 540, 15),
   logistics_coordinator: career(
     'logistics_coordinator',
@@ -92,6 +122,16 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     0.5,
     480,
     11
+  ),
+  operations_analyst: career(
+    'operations_analyst',
+    'entregador',
+    'Análise de operações',
+    450_000,
+    42,
+    0.55,
+    450,
+    10
   ),
   intern: career('intern', 'estudante', 'Estudo e estágio', 120_000, 24, 0.7, 360, 7),
   junior_analyst: career(
@@ -104,6 +144,7 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     480,
     10
   ),
+  data_analyst: career('data_analyst', 'estudante', 'Análise de dados', 400_000, 40, 0.52, 450, 9),
   health_worker: career('health_worker', 'saude', 'Saúde', 480_000, 48, 0.2, 540, 14),
   health_coordinator: career(
     'health_coordinator',
@@ -115,16 +156,32 @@ export const careers: Readonly<Record<string, CareerDef>> = {
     510,
     12
   ),
+  health_manager: career('health_manager', 'saude', 'Gestão de saúde', 780_000, 42, 0.35, 480, 11),
 }
 
 const nextCareer: Readonly<Record<string, string>> = {
   construction_worker: 'construction_foreman',
+  construction_foreman: 'construction_supervisor',
   finance_analyst: 'compliance_specialist',
+  compliance_specialist: 'risk_manager',
   cultural_producer: 'cultural_coordinator',
+  cultural_coordinator: 'cultural_director',
   courier: 'logistics_coordinator',
+  logistics_coordinator: 'operations_analyst',
   intern: 'junior_analyst',
+  junior_analyst: 'data_analyst',
   health_worker: 'health_coordinator',
+  health_coordinator: 'health_manager',
 }
+
+const secondTransitionIds = new Set([
+  'construction_supervisor',
+  'risk_manager',
+  'cultural_director',
+  'operations_analyst',
+  'data_analyst',
+  'health_manager',
+])
 
 function career(
   id: string,
@@ -161,11 +218,16 @@ export function availableCareerMove(state: GameState): CareerDef | undefined {
 }
 
 export function canAdvanceCareer(state: GameState): boolean {
+  const target = availableCareerMove(state)
   return (
-    availableCareerMove(state) !== undefined &&
-    Number(state.flags['career:work-days'] ?? 0) >= 60 &&
+    target !== undefined &&
+    Number(state.flags['career:work-days'] ?? 0) >= careerWorkDaysRequired(target) &&
     state.education?.status === 'completed'
   )
+}
+
+export function careerWorkDaysRequired(target: CareerDef): number {
+  return secondTransitionIds.has(target.id) ? 160 : 60
 }
 
 export function advanceCareer(state: GameState): GameState {

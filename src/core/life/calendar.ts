@@ -87,14 +87,17 @@ export interface MonthStatement {
   readonly net: number
   readonly occupation: string
   readonly housing: string
+  readonly careDays: number
 }
 
 export function monthStatement(state: GameState, month: number): MonthStatement {
   const firstDay = (month - 1) * 30 + 1
   const lastDay = month * 30
   let workDays = 0
+  let careDays = 0
   for (let day = firstDay; day <= lastDay; day += 1) {
     if (isFlagTrue(state, activityKey(day, 'work'))) workDays += 1
+    if (isFlagTrue(state, `family:care:${day}`)) careDays += 1
   }
   const salary = Math.round((state.player.monthlyIncome * Math.min(workDays, 20)) / 20)
   const rent = state.player.monthlyRent
@@ -106,6 +109,53 @@ export function monthStatement(state: GameState, month: number): MonthStatement 
     net: salary - rent,
     occupation: state.player.occupation,
     housing: state.player.housing,
+    careDays,
+  }
+}
+
+export interface YearBalance {
+  readonly year: 1
+  readonly daysClosed: number
+  readonly workDays: number
+  readonly studyDays: number
+  readonly socialDays: number
+  readonly restDays: number
+  readonly careDays: number
+  readonly occupation: string
+  readonly housing: string
+  readonly partnership: 'none' | 'partnered' | 'married'
+  readonly children: number
+  readonly money: number
+  readonly epilogue: string
+}
+
+export function yearBalance(state: GameState): YearBalance {
+  const count = (predicate: (day: number) => boolean): number => {
+    let total = 0
+    for (let day = 1; day <= 365; day += 1) if (predicate(day)) total += 1
+    return total
+  }
+  const partnership = state.family.partnership?.status ?? 'none'
+  const children = state.family.children.length
+  return {
+    year: 1,
+    daysClosed: count((day) => isFlagTrue(state, closedKey(day))),
+    workDays: count((day) => isFlagTrue(state, activityKey(day, 'work'))),
+    studyDays: count((day) => isFlagTrue(state, activityKey(day, 'study'))),
+    socialDays: count((day) => isFlagTrue(state, activityKey(day, 'socialize'))),
+    restDays: count((day) => isFlagTrue(state, activityKey(day, 'rest'))),
+    careDays: count((day) => isFlagTrue(state, `family:care:${day}`)),
+    occupation: state.player.occupation,
+    housing: state.player.housing,
+    partnership,
+    children,
+    money: state.player.money,
+    epilogue:
+      children > 0
+        ? 'A cidade agora cabe numa rotina de trabalho, cuidado e vínculos escolhidos.'
+        : partnership !== 'none'
+          ? 'A cidade continua difícil, mas já não é atravessada sem companhia.'
+          : 'A cidade virou repertório, trabalho e espaço para seguir escolhendo.',
   }
 }
 
@@ -134,6 +184,17 @@ export function closeDay(state: GameState): CalendarResult {
     }
   }
 
+  if (day === 365 && !isFlagTrue(next, 'life:year:1:closed')) {
+    const balance = yearBalance(next)
+    next = withFlag(next, 'life:year:1:closed', true)
+    next = withJournalEntry(next, {
+      id: 'life:year:1',
+      kind: 'lesson',
+      text: `Um ano em São Paulo: ${balance.workDays} dias de trabalho e ${balance.careDays} de cuidado.`,
+    })
+    events.push({ type: 'lifeYearCompleted', ...balance })
+  }
+
   next = {
     ...next,
     clock: { day: day + 1, period: 'morning', minuteOfDay: 420 },
@@ -148,4 +209,8 @@ export function isDayClosed(state: GameState, day = state.clock.day): boolean {
 
 export function isMonthSettled(state: GameState, month: number): boolean {
   return isFlagTrue(state, settledKey(month))
+}
+
+export function isYearClosed(state: GameState): boolean {
+  return isFlagTrue(state, 'life:year:1:closed')
 }

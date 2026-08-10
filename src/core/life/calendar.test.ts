@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { enrollInEducation } from './education.js'
-import { closeDay, isDayClosed, isMonthSettled, scheduleActivity } from './calendar.js'
-import { createInitialState } from '../state/state.js'
+import {
+  closeDay,
+  isDayClosed,
+  isMonthSettled,
+  isYearClosed,
+  scheduleActivity,
+  yearBalance,
+} from './calendar.js'
+import { createInitialState, type GameState } from '../state/state.js'
 
 const initial = () => createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 7 })
 
@@ -51,5 +58,20 @@ describe('metropolitan calendar', () => {
     for (let day = 1; day <= 30; day += 1) state = closeDay(state).state
     const entry = state.journal.find((item) => item.id === 'life:month:1')
     expect(entry?.text).toContain('salário e aluguel')
+  })
+
+  it('creates one persistent, non-moralising balance on day 365', () => {
+    let state: GameState = {
+      ...initial(),
+      clock: { ...initial().clock, day: 365 },
+      flags: { 'life:agenda:10:work': true, 'family:care:20': true },
+    }
+    const closed = closeDay(state)
+    const event = closed.events.find((item) => item.type === 'lifeYearCompleted')
+    expect(event).toMatchObject({ workDays: 1, careDays: 1, children: 0 })
+    expect(isYearClosed(closed.state)).toBe(true)
+    expect(yearBalance(closed.state).epilogue).toContain('seguir escolhendo')
+    state = { ...closed.state, clock: { ...closed.state.clock, day: 365 } }
+    expect(closeDay(state)).toEqual({ state, events: [] })
   })
 })

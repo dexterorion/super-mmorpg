@@ -42,6 +42,7 @@ import {
   advanceCareer,
   availableCareerMove,
   canAdvanceCareer,
+  careerWorkDaysRequired,
   currentCareer,
 } from './life/career.js'
 import { canMoveHousing, moveHousing, movingCost, type HousingOption } from './life/housing.js'
@@ -441,8 +442,8 @@ export class GameSession {
           ? {}
           : {
               lockedReason:
-                workDays < 60
-                  ? `${workDays}/60 dias de experiência`
+                workDays < careerWorkDaysRequired(target)
+                  ? `${workDays}/${careerWorkDaysRequired(target)} dias de experiência`
                   : state.education?.status !== 'completed'
                     ? 'concluir uma formação'
                     : 'sem disposição',

@@ -4,6 +4,7 @@ import { archetypes } from '../../src/content/archetypes.js'
 import { content } from '../../src/content/index.js'
 import { housing } from '../../src/content/housing.js'
 import { enrollInEducation } from '../../src/core/life/education.js'
+import { deserialize, serialize } from '../../src/core/save/save.js'
 import { GameSession } from '../../src/core/session.js'
 import { createInitialState } from '../../src/core/state/state.js'
 import type { ArchetypeId, GameEvent } from '../../src/core/types.js'
@@ -24,6 +25,11 @@ export interface LifeYearResult {
   readonly finalHousing: string
   readonly careerChanges: number
   readonly housingChanges: number
+  readonly familyDecision: 'yes' | 'no'
+  readonly partnershipStatus: string
+  readonly children: number
+  readonly careDays: number
+  readonly epilogue: string
   readonly invariants: {
     readonly noSoftlock: boolean
     readonly safeIntegerMoney: boolean
@@ -31,6 +37,11 @@ export interface LifeYearResult {
     readonly careerChanged: boolean
     readonly housingChanged: boolean
     readonly monthlyLedgerReflectsChanges: boolean
+    readonly familyDecisionMade: boolean
+    readonly careConsistent: boolean
+    readonly secondCareerReached: boolean
+    readonly yearClosedOnce: boolean
+    readonly finalSaveRoundTrip: boolean
   }
 }
 
@@ -57,20 +68,53 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
     place: 'tiete_metro',
     district: 'tiete',
     mode: { kind: 'world' },
+    relationships: { ...state.relationships, yumi: 2 },
   }
 
   const events: GameEvent[] = []
   const activityCounts: Record<string, number> = {}
+  const familyDecision: 'yes' | 'no' =
+    archetypeId === 'faria_limer' || archetypeId === 'artista' ? 'no' : 'yes'
   for (let closed = 0; closed < 365; closed += 1) {
+    if (state.clock.day === 40) {
+      const family = session.performById(state, 'family:partner:yumi')
+      state = family.state
+      events.push(...family.events)
+    }
     if (state.clock.day === 100) {
       const career = session.performById(state, 'career:advance')
       state = career.state
       events.push(...career.events)
     }
+    if (state.clock.day === 121) {
+      const marriage = session.performById(state, 'family:marry')
+      state = marriage.state
+      events.push(...marriage.events)
+    }
+    if (state.clock.day === 122) {
+      const decision = session.performById(state, `family:children:${familyDecision}`)
+      state = decision.state
+      events.push(...decision.events)
+    }
+    if (state.clock.day === 123 && familyDecision === 'yes') {
+      const child = session.performById(state, 'family:welcome-child')
+      state = child.state
+      events.push(...child.events)
+    }
     if (state.clock.day === 180) {
       const move = session.performById(state, 'housing:move:quarto_guarulhos')
       state = move.state
       events.push(...move.events)
+    }
+    if (state.clock.day === 250) {
+      const career = session.performById(state, 'career:advance')
+      state = career.state
+      events.push(...career.events)
+    }
+    if (state.family.children.length > 0) {
+      const care = session.performById(state, 'family:care-day')
+      state = care.state
+      events.push(...care.events)
     }
     const weekday = ((state.clock.day - 1) % 7) + 1
     const planned = [
@@ -100,6 +144,18 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
   const careerChanges = events.filter((event) => event.type === 'careerChanged').length
   const housingChanges = events.filter((event) => event.type === 'housingChanged').length
   const monthlyStatements = events.filter((event) => event.type === 'monthSettled')
+  const annualEvents = events.filter((event) => event.type === 'lifeYearCompleted')
+  const annual = annualEvents[0]
+  const careDays = events.filter((event) => event.type === 'familyCare').length
+  const replayState = { ...state, clock: { ...state.clock, day: 365 } }
+  const replay = session.performById(replayState, 'agenda:close-day')
+  const loaded = deserialize(serialize(state, 1_000))
+  const saveRoundTrip =
+    loaded.ok &&
+    loaded.state.flags['life:year:1:closed'] === true &&
+    loaded.state.player.occupation === state.player.occupation &&
+    loaded.state.player.housing === state.player.housing &&
+    loaded.state.family.children.length === state.family.children.length
   return {
     archetype: archetypeId,
     seed,
@@ -113,15 +169,31 @@ export function runLifeYear(archetypeId: ArchetypeId, seed: number): LifeYearRes
     finalHousing: state.player.housing,
     careerChanges,
     housingChanges,
+    familyDecision,
+    partnershipStatus: state.family.partnership?.status ?? 'none',
+    children: state.family.children.length,
+    careDays,
+    epilogue: typeof annual?.epilogue === 'string' ? annual.epilogue : '',
     invariants: {
       noSoftlock: state.clock.day === 366,
       safeIntegerMoney: Number.isSafeInteger(state.player.money) && state.player.money >= 0,
       monthlyCyclesUnique: months.length === new Set(months).size,
-      careerChanged: careerChanges === 1,
+      careerChanged: careerChanges === 2,
       housingChanged: housingChanges === 1,
       monthlyLedgerReflectsChanges:
         monthlyStatements.some((event) => event.occupation === state.player.occupation) &&
         monthlyStatements.some((event) => event.housing === state.player.housing),
+      familyDecisionMade:
+        state.family.childrenDecision === familyDecision &&
+        state.family.partnership?.status === 'married',
+      careConsistent:
+        familyDecision === 'yes'
+          ? state.family.children.length === 1 && careDays >= 200
+          : state.family.children.length === 0 && careDays === 0,
+      secondCareerReached: careerChanges === 2,
+      yearClosedOnce:
+        annualEvents.length === 1 && replay.state === replayState && replay.events.length === 0,
+      finalSaveRoundTrip: saveRoundTrip,
     },
   }
 }

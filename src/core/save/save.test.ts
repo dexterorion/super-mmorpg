@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState, SCHEMA_VERSION } from '../state/state.js'
+import { closeDay, isYearClosed } from '../life/calendar.js'
 import { base64ToBytes, bytesToBase64, checksum, decodeText, encodeText } from './codec.js'
 import {
   createMemoryStorage,
@@ -134,6 +135,27 @@ describe('serialize / deserialize', () => {
     if (!result.ok) return
     expect(result.state.family).toEqual(separated.family)
     expect(result.state.flags['family:separated:yumi:200']).toBe(true)
+  })
+
+  it('persists the annual epilogue and keeps its closing idempotent after reload', () => {
+    const annual = closeDay({
+      ...state,
+      clock: { ...state.clock, day: 365 },
+      flags: {
+        'career:current': 'cultural_director',
+        'housing:moved:180': true,
+        'family:care:200': true,
+      },
+    }).state
+    const result = deserialize(serialize(annual, 1_000))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(isYearClosed(result.state)).toBe(true)
+    expect(result.state.journal).toContainEqual(
+      expect.objectContaining({ id: 'life:year:1', day: 365 })
+    )
+    const replayState = { ...result.state, clock: { ...result.state.clock, day: 365 } }
+    expect(closeDay(replayState)).toEqual({ state: replayState, events: [] })
   })
 
   it('migrates a v2 archetype save to the housing model', () => {
