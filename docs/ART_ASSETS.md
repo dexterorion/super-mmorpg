@@ -57,3 +57,9 @@ mapa de demonstração. A composição foi dirigida por referências institucion
 do Centro, com Viaduto do Chá, calçadão, fachadas históricas, banca, bicicletário,
 drenagem, postes e pavimento molhado. Personagens, chuva e HUD continuam sendo
 renderizados em tempo real.
+
+A mesma direção foi propagada a `tiete.png`, `paulista.png` e `minhocao.png`.
+Cada backdrop foi gerado separadamente para preservar cobertura e fluxo
+intermodal no Tietê, o vão vermelho do MASP na Paulista e o tabuleiro elevado com
+uso de parque no Minhocão. A avaliação e as capturas comparativas ficam em
+`docs/VISUAL_DISTRICTS.md`.
