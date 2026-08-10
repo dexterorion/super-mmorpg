@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Condition } from '../core/rules/conditions.js'
 import type { Effect } from '../core/rules/effects.js'
+import { GameSession } from '../core/session.js'
+import { createInitialState, type GameState } from '../core/state/state.js'
 import { content } from './index.js'
 import {
   dialogueSchema,
@@ -15,6 +17,50 @@ const effects = (list?: readonly Effect[]) => list ?? []
 const conditions = (list?: readonly Condition[]) => list ?? []
 
 describe('Act 1 content', () => {
+  it('offers an exclusive, sourced community-network choice without proselytism', () => {
+    const dialogue = content.dialogues.dlg_rede_comunitaria
+    expect(dialogue).toBeDefined()
+    if (!dialogue) return
+    const choices = dialogue.nodes.start?.choices ?? []
+    expect(choices.map((choice) => choice.id)).toEqual([
+      'mutirao_comunitario',
+      'encaminhamento_cras',
+    ])
+    for (const choice of choices) {
+      expect(choice.effects).toContainEqual(expect.objectContaining({ kind: 'flag', value: true }))
+      expect(choice.effects).toContainEqual(
+        expect.objectContaining({
+          kind: 'journal',
+          source: expect.objectContaining({ url: expect.stringMatching(/^https:\/\//) }),
+        })
+      )
+    }
+    expect(dialogue.nodes.start?.lines.join(' ')).toContain('sem exigir culto ou conversão')
+  })
+
+  it.each([
+    ['mutirao_comunitario', 'network:community_mutual_aid'],
+    ['encaminhamento_cras', 'network:public_assistance_referral'],
+  ] as const)('persists the %s community-network route', (choiceId, flagId) => {
+    const session = new GameSession(content)
+    const initial = createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 4 })
+    let state: GameState = {
+      ...initial,
+      district: 'zona_leste',
+      place: 'zona_leste_radial',
+      mode: { kind: 'world' as const },
+    }
+    state = session.performById(state, 'talk:pastora_nadia').state
+    state = session.performById(state, 'advance').state
+    state = session.performById(state, 'advance').state
+    state = session.performById(state, `choice:${choiceId}`).state
+    expect(state.flags[flagId]).toBe(true)
+    expect(state.journal.at(-1)?.source?.url).toMatch(/^https:\/\//)
+    expect(
+      session.availableActions(state).some((action) => action.id === 'talk:pastora_nadia')
+    ).toBe(false)
+  })
+
   it('matches every runtime schema', () => {
     Object.values(content.dialogues).forEach((value) =>
       expect(() => dialogueSchema.parse(value)).not.toThrow()

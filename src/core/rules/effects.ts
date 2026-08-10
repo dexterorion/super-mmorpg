@@ -54,6 +54,7 @@ export type Effect =
       readonly id: string
       readonly text: string
       readonly entryKind: 'objective' | 'lesson' | 'contact'
+      readonly source?: { readonly label: string; readonly url: string }
     }
   | { readonly kind: 'advancePeriod' }
   | { readonly kind: 'sleep'; readonly quality?: 'bed' | 'couch' | 'rough' }
@@ -170,6 +171,7 @@ export function applyEffect(state: GameState, effect: Effect): EffectResult {
           id: effect.id,
           text: effect.text,
           kind: effect.entryKind,
+          ...(effect.source ? { source: effect.source } : {}),
         }),
         events,
       }

@@ -385,7 +385,12 @@ function isJournalEntry(value: unknown): boolean {
     typeof value.id === 'string' &&
     typeof value.day === 'number' &&
     typeof value.text === 'string' &&
-    isOneOf(value.kind, ['objective', 'lesson', 'contact'])
+    isOneOf(value.kind, ['objective', 'lesson', 'contact']) &&
+    (value.source === undefined ||
+      (isRecord(value.source) &&
+        typeof value.source.label === 'string' &&
+        typeof value.source.url === 'string' &&
+        value.source.url.startsWith('https://')))
   )
 }
 

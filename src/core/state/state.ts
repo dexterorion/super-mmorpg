@@ -85,6 +85,7 @@ export interface JournalEntry {
   readonly day: number
   readonly text: string
   readonly kind: 'objective' | 'lesson' | 'contact'
+  readonly source?: { readonly label: string; readonly url: string }
 }
 
 export type Mode =

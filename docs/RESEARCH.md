@@ -23,6 +23,24 @@ como contexto e parâmetros de jogo; GAROA não reproduz textos ou fotografias.
 ## Crime econômico e instituições
 
 - [Receita Federal e MPSP — cooperação contra estruturas econômicas do crime organizado, 28/05/2026](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/maio/receita-federal-e-mpsp-intensificam-ofensiva-contra-o-crime-organizado/)
+- [Ministério da Fazenda — Operação Carbono Oculto, fintechs e Faria Lima, 03/12/2025](https://www.gov.br/fazenda/pt-br/assuntos/noticias/2025/dezembro/receita-federal-destaca-aprimoramentos-recentes-da-atuacao-tributaria-no-combate-ao-crime-organizado)
+- [Ministério Público de Contas de SP — manifestação sobre achados atribuídos à Operação Carbono Oculto](https://www.mpc.sp.gov.br/sites/mpcsp/files/noticias/TC-3870.989.25-8%20Contas%20do%20Governador%20de%202025%20completa.pdf)
+
+O jogo trata essas informações como alegações e achados de investigação,
+não como condenações. A presença de alvos e estruturas na Faria Lima não acusa o
+bairro, todas as fintechs nem todas as pessoas do setor financeiro.
+
+## Religião, assistência e redes comunitárias
+
+- [Prefeitura — Portaria SMADS 105/2025](https://legislacao.prefeitura.sp.gov.br/portaria-secretaria-municipal-de-assistencia-e-desenvolvimento-social-smads-105-de-22-de-setembro-de-2025)
+- [Prefeitura — Rede Socioassistencial](https://www.prefeitura.sp.gov.br/web/assistencia_social/w/rede_socioassistencial/3200)
+- [Prefeitura — Conselho Municipal de Defesa e Promoção da Liberdade Religiosa](https://admin.prefeitura.sp.gov.br/web/direitos_humanos/w/participacao_social/conselhos_e_orgaos_colegiados/complir/307702)
+
+Pastora Nádia e sua igreja são ficcionais. A cena reconhece que comunidades
+religiosas podem formar redes voluntárias, sem presumir que toda igreja o faça.
+Também explicita os limites da política municipal: acesso universal, sem
+proselitismo como condição, e voluntariado sem substituir profissionais do SUAS.
+A escolha de procurar diretamente a rede pública recebe o mesmo respeito.
 
 Eventos inspirados em fatos terão data e fonte dentro do Caderninho. Pessoas e
 empresas fictícias não serão apresentadas como participantes de casos reais.

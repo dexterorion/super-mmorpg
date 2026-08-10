@@ -96,11 +96,11 @@ export const conjunctureEvents: Readonly<Record<ConjunctureId, ConjunctureEvent>
   },
   financial_crime_investigation_2026_05: {
     id: 'financial_crime_investigation_2026_05',
-    occurredOn: '2026-05-28',
-    headline: 'Instituições ampliam investigação de estruturas financeiras ilícitas',
-    fact: 'Receita Federal e MPSP firmaram cooperação para investigar lavagem de dinheiro e ocultação patrimonial.',
+    occurredOn: '2025-08-28',
+    headline: 'Carbono Oculto alcança estruturas financeiras sob investigação',
+    fact: 'Órgãos atribuíram ao PCC um esquema que teria usado fintechs e fundos com alvos na Faria Lima; investigação não é condenação nem acusa o setor inteiro.',
     source:
-      'https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2026/maio/receita-federal-e-mpsp-intensificam-ofensiva-contra-o-crime-organizado/',
+      'https://www.mpc.sp.gov.br/sites/mpcsp/files/noticias/TC-3870.989.25-8%20Contas%20do%20Governador%20de%202025%20completa.pdf',
     impacts: {
       pedreiro: impact(0, 0, 1, 0),
       faria_limer: impact(0, 0, 3, 2),
@@ -178,7 +178,8 @@ export function applyConjuncture(state: GameState, eventId: ConjunctureId): Conj
   next = withJournalEntry(next, {
     id: `conjuncture:${eventId}`,
     kind: 'lesson',
-    text: `${outcome.headline}. No seu mês: ${signedMoney(immediateDelta)} e ${energyDelta} de disposição.`,
+    text: `${outcome.headline}. No seu mês: ${signedMoney(immediateDelta)} e ${energyDelta} de disposição. Fonte primária (${outcome.occurredOn}): ${outcome.source}`,
+    source: { label: `Fonte primária · ${outcome.occurredOn}`, url: outcome.source },
   })
 
   return {

@@ -77,6 +77,24 @@ describe('serialize / deserialize', () => {
     expect(result.migrated).toBe(false)
   })
 
+  it('persists a primary source attached to a Caderninho entry', () => {
+    const sourced = {
+      ...state,
+      journal: [
+        {
+          id: 'source-test',
+          day: 1,
+          kind: 'lesson' as const,
+          text: 'Um fato com origem verificável.',
+          source: { label: 'Prefeitura de São Paulo', url: 'https://prefeitura.sp.gov.br/' },
+        },
+      ],
+    }
+    const result = deserialize(serialize(sourced, 1000))
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.state.journal[0]?.source).toEqual(sourced.journal[0]?.source)
+  })
+
   it('persists partnership, children decisions and care history', () => {
     const familyState = {
       ...state,

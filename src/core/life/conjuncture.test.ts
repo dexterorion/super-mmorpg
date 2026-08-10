@@ -51,9 +51,24 @@ describe('economic and social conjuncture', () => {
     for (const eventId of eventIds) {
       const outcome = resolveConjuncture(eventId, 'estudante')
       expect(outcome.occurredOn).toMatch(/^\d{4}-\d{2}-\d{2}$/)
-      expect(outcome.source).toMatch(/^https:\/\/(www\.)?(bcb|gov|agenciadenoticias\.ibge)/)
+      expect(outcome.source).toMatch(
+        /^https:\/\/(www\.)?(bcb|gov|agenciadenoticias\.ibge|mpc\.sp\.gov)/
+      )
       expect(outcome.fact.length).toBeGreaterThan(30)
     }
+  })
+
+  it('describes PCC, fintech and Faria Lima as a bounded investigation, not collective guilt', () => {
+    const outcome = resolveConjuncture('financial_crime_investigation_2026_05', 'faria_limer')
+    expect(outcome.fact).toMatch(/PCC.*teria usado fintechs.*Faria Lima/)
+    expect(outcome.fact).toContain('investigação não é condenação')
+    expect(outcome.fact).toContain('nem acusa o setor inteiro')
+    const applied = applyConjuncture(
+      createInitialState({ name: 'Jaci', hometown: 'prudente', seed: 42 }),
+      'financial_crime_investigation_2026_05'
+    )
+    expect(applied.state.journal.at(-1)?.source?.url).toBe(outcome.source)
+    expect(applied.state.journal.at(-1)?.text).toContain('Fonte primária')
   })
 
   it('turns rent pressure into visible recurring and immediate costs', () => {

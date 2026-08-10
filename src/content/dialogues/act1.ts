@@ -676,4 +676,59 @@ export const dialoguesAct1 = {
       },
     },
   },
+  dlg_rede_comunitaria: {
+    id: 'dlg_rede_comunitaria',
+    start: 'start',
+    nodes: {
+      start: {
+        id: 'start',
+        speaker: 'pastora_nadia',
+        lines: [
+          'A igreja da esquina abriu o salão para separar água, comida e material de limpeza.',
+          'Pastora Nádia explica que a ajuda é para qualquer pessoa, sem exigir culto ou conversão.',
+          '“A rede comunitária ajuda hoje. Para direitos contínuos, o CRAS também precisa entrar.”',
+        ],
+        choices: [
+          {
+            id: 'mutirao_comunitario',
+            text: 'Entrar no mutirão e assumir um turno de distribuição.',
+            effects: [
+              { kind: 'flag', id: 'network:community_mutual_aid', value: true },
+              { kind: 'energy', delta: -4 },
+              {
+                kind: 'journal',
+                id: 'network_community_mutual_aid',
+                text: 'Participei de uma rede religiosa aberta, sem substituir o SUAS. Fonte: legislacao.prefeitura.sp.gov.br, Portaria SMADS 105/2025.',
+                entryKind: 'contact',
+                source: {
+                  label: 'Prefeitura de São Paulo · Portaria SMADS 105/2025',
+                  url: 'https://legislacao.prefeitura.sp.gov.br/portaria-secretaria-municipal-de-assistencia-e-desenvolvimento-social-smads-105-de-22-de-setembro-de-2025',
+                },
+              },
+            ],
+            exit: true,
+          },
+          {
+            id: 'encaminhamento_cras',
+            text: 'Ajudar na triagem e pedir o contato da rede pública do território.',
+            effects: [
+              { kind: 'flag', id: 'network:public_assistance_referral', value: true },
+              { kind: 'savvyXp', amount: 4 },
+              {
+                kind: 'journal',
+                id: 'network_public_assistance',
+                text: 'Levei demandas à rede pública; voluntariado não substitui direitos. Fonte: prefeitura.sp.gov.br, Rede Socioassistencial.',
+                entryKind: 'contact',
+                source: {
+                  label: 'Prefeitura de São Paulo · Rede Socioassistencial',
+                  url: 'https://www.prefeitura.sp.gov.br/web/assistencia_social/w/rede_socioassistencial/3200',
+                },
+              },
+            ],
+            exit: true,
+          },
+        ],
+      },
+    },
+  },
 } as const satisfies Readonly<Record<string, Dialogue>>

@@ -8,4 +8,5 @@ export const npcs = {
   tico: { id: 'tico', name: 'Tico', color: '#f3c969' },
   renan: { id: 'renan', name: 'Renan', color: '#d97963' },
   val: { id: 'val', name: 'Val', color: '#6883a0' },
+  pastora_nadia: { id: 'pastora_nadia', name: 'Pastora Nádia', color: '#80689d' },
 } as const satisfies Readonly<Record<string, NpcDef>>

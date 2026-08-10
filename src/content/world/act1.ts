@@ -276,6 +276,25 @@ export const placesAct1 = {
     name: 'Radial Leste alagada',
     station: true,
     onEnter: [{ dialogueId: 'dlg_act4' }],
+    npcs: [
+      {
+        npcId: 'pastora_nadia',
+        dialogueId: 'dlg_rede_comunitaria',
+        label: 'Conversar com Pastora Nádia',
+        conditions: [
+          {
+            kind: 'not',
+            of: {
+              kind: 'any',
+              of: [
+                { kind: 'flag', id: 'network:community_mutual_aid' },
+                { kind: 'flag', id: 'network:public_assistance_referral' },
+              ],
+            },
+          },
+        ],
+      },
+    ],
     exits: [],
   },
   minhocao_domingo: {
